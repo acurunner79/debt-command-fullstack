@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
 import { getBills } from "../services/billService";
 import { getIncomeSources } from "../services/incomeService";
 import type { Bill } from "../types/bill";
@@ -14,8 +13,6 @@ import {
 import { calculateTotalMonthlyIncome } from "../utils/incomeCalculations";
 
 export function DashboardPage() {
-  const { user, logoutUser } = useAuth();
-
   const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,52 +61,90 @@ export function DashboardPage() {
   }, [bills]);
 
   return (
-    <main>
-      <h1>DebtCommand Dashboard</h1>
+    <main className="page dashboard-page">
+      <header className="page-header">
+        <p className="eyebrow">Financial Mission Control</p>
+        <h1>Dashboard</h1>
+        <p>
+          Monitor income, minimum obligations, available monthly cashflow, and
+          debt exposure.
+        </p>
+      </header>
 
-      <p>
-        Signed in as <strong>{user?.email}</strong>
-      </p>
-
-      {error && <p>{error}</p>}
+      {error && <p className="status-message status-message--error">{error}</p>}
 
       {loading ? (
-        <p>Loading command center...</p>
+        <p className="status-message">Loading command center...</p>
       ) : (
         <>
-          <section>
-            <h2>Command Summary</h2>
+          <section className="panel">
+            <div className="section-heading">
+              <p className="eyebrow">Command Summary</p>
+              <h2>Monthly Overview</h2>
+            </div>
 
-            <p>Monthly Income: {formatCurrency(monthlyIncome)}</p>
-            <p>
-              Monthly Minimum Bill Payments:{" "}
-              {formatCurrency(monthlyMinimumPayments)}
-            </p>
-            <p>
-              Estimated Monthly Remaining Cashflow:{" "}
-              {formatCurrency(monthlyRemainingCashflow)}
-            </p>
-            <p>Total Debt Balance: {formatCurrency(totalDebtBalance)}</p>
-            <p>Credit Utilization: {creditUtilization.toFixed(1)}%</p>
+            <div className="metric-grid">
+              <article className="metric-card">
+                <span className="metric-card__label">Monthly Income</span>
+                <strong className="metric-card__value">
+                  {formatCurrency(monthlyIncome)}
+                </strong>
+              </article>
+
+              <article className="metric-card">
+                <span className="metric-card__label">
+                  Minimum Bill Payments
+                </span>
+                <strong className="metric-card__value">
+                  {formatCurrency(monthlyMinimumPayments)}
+                </strong>
+              </article>
+
+              <article className="metric-card metric-card--accent">
+                <span className="metric-card__label">
+                  Remaining Cashflow
+                </span>
+                <strong className="metric-card__value">
+                  {formatCurrency(monthlyRemainingCashflow)}
+                </strong>
+              </article>
+
+              <article className="metric-card">
+                <span className="metric-card__label">Total Debt Balance</span>
+                <strong className="metric-card__value">
+                  {formatCurrency(totalDebtBalance)}
+                </strong>
+              </article>
+
+              <article className="metric-card">
+                <span className="metric-card__label">Credit Utilization</span>
+                <strong className="metric-card__value">
+                  {creditUtilization.toFixed(1)}%
+                </strong>
+              </article>
+            </div>
           </section>
 
-          <section>
-            <h2>Quick Actions</h2>
+          <section className="panel">
+            <div className="section-heading">
+              <p className="eyebrow">Quick Actions</p>
+              <h2>Manage Records</h2>
+            </div>
 
-            <p>
-              <Link to="/income">Manage Income</Link>
-            </p>
+            <div className="action-grid">
+              <Link className="action-card" to="/income">
+                <span>Manage Income</span>
+                <strong>Open income sources</strong>
+              </Link>
 
-            <p>
-              <Link to="/bills">Manage Bills</Link>
-            </p>
+              <Link className="action-card" to="/bills">
+                <span>Manage Bills</span>
+                <strong>Open bill registry</strong>
+              </Link>
+            </div>
           </section>
         </>
       )}
-
-      <button type="button" onClick={logoutUser}>
-        Logout
-      </button>
     </main>
   );
 }
