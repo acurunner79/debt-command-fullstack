@@ -4,10 +4,103 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  name          String?
+  incomeSources IncomeSource[]
+  bills         Bill[]
+  payments      Payment[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model IncomeSource {
+  id        String          @id @default(uuid())
+  userId    String
+  name      String
+  amount    Decimal
+  frequency IncomeFrequency
+  active    Boolean         @default(true)
+  notes     String?
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model Bill {
+  id             String    @id @default(uuid())
+  userId         String
+  name           String
+  type           BillType
+  dueDay         Int
+  balance        Decimal?
+  minimumPayment Decimal
+  creditLimit    Decimal?
+  interestRate   Decimal?
+  autopay        Boolean   @default(false)
+  recurring      Boolean   @default(true)
+  active         Boolean   @default(true)
+  notes          String?
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments       Payment[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  userId      String
+  billId      String
+  month       Int
+  year        Int
+  amountPaid  Decimal
+  paymentDate DateTime?
+  status      PaymentStatus @default(PAID)
+  notes       String?
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bill        Bill          @relation(fields: [billId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([billId, month, year])
+}
+
+enum IncomeFrequency {
+  WEEKLY
+  BIWEEKLY
+  SEMIMONTHLY
+  MONTHLY
+  YEARLY
+  ONETIME
+}
+
+enum BillType {
+  CREDIT_CARD
+  AUTO_LOAN
+  PERSONAL_LOAN
+  MORTGAGE
+  RENT
+  UTILITY
+  INSURANCE
+  SUBSCRIPTION
+  MEDICAL
+  STUDENT_LOAN
+  OTHER
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  PARTIAL
+  OVERDUE
+  SKIPPED
 }
