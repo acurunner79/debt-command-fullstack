@@ -4,6 +4,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { IncomePage } from "./pages/IncomePage";
+import { BillsPage } from "./pages/BillsPage";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/income" element={<IncomePage />} />
+        <Route path="/bills" element={<BillsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
