@@ -427,6 +427,16 @@ header h1 {
   max-width: 720px;
 }
 
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-field input {
+  width: auto;
+}
+
 .record-list {
   display: grid;
   gap: 14px;

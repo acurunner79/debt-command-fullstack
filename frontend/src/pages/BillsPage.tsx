@@ -135,20 +135,53 @@ export function BillsPage() {
   }
 
   return (
-    <main>
-      <h1>Bills</h1>
+    <main className="page bills-page">
+      <header className="page-header">
+        <p className="eyebrow">Bill Registry</p>
+        <h1>Bills</h1>
+        <p>
+          Track recurring obligations, minimum payments, debt balances, credit
+          limits, and utilization exposure.
+        </p>
+      </header>
 
-      <section>
-        <h2>Bill Summary</h2>
-        <p>Total Minimum Payments: {formatCurrency(totalMinimumPayments)}</p>
-        <p>Total Debt Balance: {formatCurrency(totalDebtBalance)}</p>
-        <p>Credit Utilization: {creditUtilization.toFixed(1)}%</p>
+      <section className="panel">
+        <div className="section-heading">
+          <p className="eyebrow">Debt Overview</p>
+          <h2>Bill Summary</h2>
+        </div>
+
+        <div className="metric-grid metric-grid--compact">
+          <article className="metric-card">
+            <span className="metric-card__label">Minimum Payments</span>
+            <strong className="metric-card__value">
+              {formatCurrency(totalMinimumPayments)}
+            </strong>
+          </article>
+
+          <article className="metric-card metric-card--accent">
+            <span className="metric-card__label">Total Debt Balance</span>
+            <strong className="metric-card__value">
+              {formatCurrency(totalDebtBalance)}
+            </strong>
+          </article>
+
+          <article className="metric-card">
+            <span className="metric-card__label">Credit Utilization</span>
+            <strong className="metric-card__value">
+              {creditUtilization.toFixed(1)}%
+            </strong>
+          </article>
+        </div>
       </section>
 
-      <section>
-        <h2>Add Bill</h2>
+      <section className="panel">
+        <div className="section-heading">
+          <p className="eyebrow">New Record</p>
+          <h2>Add Bill</h2>
+        </div>
 
-        <form onSubmit={handleSubmit}>
+        <form className="command-form" onSubmit={handleSubmit}>
           <label>
             Name
             <input
@@ -229,7 +262,7 @@ export function BillsPage() {
             />
           </label>
 
-          <label>
+          <label className="checkbox-field">
             <input
               checked={autopay}
               onChange={(event) => setAutopay(event.target.checked)}
@@ -238,7 +271,7 @@ export function BillsPage() {
             Autopay
           </label>
 
-          <label>
+          <label className="checkbox-field">
             <input
               checked={recurring}
               onChange={(event) => setRecurring(event.target.checked)}
@@ -255,7 +288,9 @@ export function BillsPage() {
             />
           </label>
 
-          {error && <p>{error}</p>}
+          {error && (
+            <p className="status-message status-message--error">{error}</p>
+          )}
 
           <button type="submit" disabled={submitting}>
             {submitting ? "Adding..." : "Add bill"}
@@ -263,25 +298,33 @@ export function BillsPage() {
         </form>
       </section>
 
-      <section>
-        <h2>Active Bills</h2>
+      <section className="panel">
+        <div className="section-heading">
+          <p className="eyebrow">Active Records</p>
+          <h2>Active Bills</h2>
+        </div>
 
         {loading ? (
-          <p>Loading bills...</p>
+          <p className="status-message">Loading bills...</p>
         ) : bills.length === 0 ? (
-          <p>No active bills yet.</p>
+          <p className="status-message">No active bills yet.</p>
         ) : (
-          <ul>
+          <ul className="record-list">
             {bills.map((bill) => (
-              <li key={bill.id}>
-                <strong>{bill.name}</strong> — {bill.type}
-                <p>Due Day: {bill.dueDay}</p>
-                <p>Balance: {formatCurrency(bill.balance || 0)}</p>
-                <p>Minimum: {formatCurrency(bill.minimumPayment)}</p>
-                {bill.creditLimit && (
-                  <p>Credit Limit: {formatCurrency(bill.creditLimit)}</p>
-                )}
-                {bill.notes && <p>{bill.notes}</p>}
+              <li className="record-card" key={bill.id}>
+                <div>
+                  <strong>{bill.name}</strong>
+                  <p>
+                    {bill.type} · Due day {bill.dueDay}
+                  </p>
+                  <p>Balance: {formatCurrency(bill.balance || 0)}</p>
+                  <p>Minimum: {formatCurrency(bill.minimumPayment)}</p>
+                  {bill.creditLimit && (
+                    <p>Credit Limit: {formatCurrency(bill.creditLimit)}</p>
+                  )}
+                  {bill.notes && <p>{bill.notes}</p>}
+                </div>
+
                 <button type="button" onClick={() => handleArchive(bill.id)}>
                   Archive
                 </button>
