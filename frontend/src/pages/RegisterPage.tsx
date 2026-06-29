@@ -30,50 +30,57 @@ export function RegisterPage() {
   };
 
   return (
-    <main>
-      <h1>DebtCommand</h1>
-      <h2>Register</h2>
+    <main className="auth-page">
+      <section className="auth-card">
+        <div className="section-heading">
+          <p className="eyebrow">New Operator Access</p>
+          <h1>DebtCommand</h1>
+          <p>Create an account to initialize your financial command center.</p>
+        </div>
 
-      <form onSubmit={handleSubmit}>
-        <label>
-          Name
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            type="text"
-          />
-        </label>
+        <form className="command-form auth-form" onSubmit={handleSubmit}>
+          <label>
+            Name
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              type="text"
+            />
+          </label>
 
-        <label>
-          Email
-          <input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            type="email"
-            required
-          />
-        </label>
+          <label>
+            Email
+            <input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              type="email"
+              required
+            />
+          </label>
 
-        <label>
-          Password
-          <input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            type="password"
-            required
-          />
-        </label>
+          <label>
+            Password
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              type="password"
+              required
+            />
+          </label>
 
-        {error && <p>{error}</p>}
+          {error && (
+            <p className="status-message status-message--error">{error}</p>
+          )}
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Creating account..." : "Create account"}
-        </button>
-      </form>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Creating account..." : "Create account"}
+          </button>
+        </form>
 
-      <p>
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
+        <p className="auth-switch">
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
+      </section>
     </main>
   );
 }

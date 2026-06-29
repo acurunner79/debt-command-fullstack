@@ -459,6 +459,36 @@ header h1 {
   font-size: 1.05rem;
 }
 
+.auth-page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  width: min(100% - 32px, 520px);
+  padding: 32px 0;
+}
+
+.auth-card {
+  width: 100%;
+  margin: 0;
+}
+
+.auth-card h1 {
+  margin-bottom: 6px;
+}
+
+.auth-card .section-heading > p:not(.eyebrow) {
+  color: var(--text-muted);
+}
+
+.auth-form {
+  margin-top: 24px;
+}
+
+.auth-switch {
+  margin: 20px 0 0;
+  color: var(--text-muted);
+}
+
 @media (max-width: 720px) {
   main,
   header {
