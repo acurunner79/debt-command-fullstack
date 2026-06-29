@@ -47,22 +47,22 @@ export function IncomePage() {
     }
   }
 
-    useEffect(() => {
-        async function loadInitialIncomeSources() {
-            setError("");
+  useEffect(() => {
+    async function loadInitialIncomeSources() {
+      setError("");
 
-            try {
-                const response = await getIncomeSources();
-                setIncomeSources(response.incomeSources);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Failed to load income");
-            } finally {
-                setLoading(false);
-            }
-        }
+      try {
+        const response = await getIncomeSources();
+        setIncomeSources(response.incomeSources);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load income");
+      } finally {
+        setLoading(false);
+      }
+    }
 
-        loadInitialIncomeSources();
-    }, []);
+    loadInitialIncomeSources();
+  }, []);
 
   const handleSubmit: FormSubmitHandler = async (event) => {
     event.preventDefault();
@@ -102,18 +102,46 @@ export function IncomePage() {
   }
 
   return (
-    <main>
-      <h1>Income</h1>
+    <main className="page income-page">
+      <header className="page-header">
+        <p className="eyebrow">Income Registry</p>
+        <h1>Income</h1>
+        <p>
+          Track active income sources and estimate normalized monthly income for
+          the command dashboard.
+        </p>
+      </header>
 
-      <section>
-        <h2>Monthly Income Estimate</h2>
-        <p>{formatCurrency(totalMonthlyIncome)}</p>
+      <section className="panel">
+        <div className="section-heading">
+          <p className="eyebrow">Monthly Estimate</p>
+          <h2>Income Summary</h2>
+        </div>
+
+        <div className="metric-grid metric-grid--compact">
+          <article className="metric-card metric-card--accent">
+            <span className="metric-card__label">Total Monthly Income</span>
+            <strong className="metric-card__value">
+              {formatCurrency(totalMonthlyIncome)}
+            </strong>
+          </article>
+
+          <article className="metric-card">
+            <span className="metric-card__label">Active Sources</span>
+            <strong className="metric-card__value">
+              {incomeSources.length}
+            </strong>
+          </article>
+        </div>
       </section>
 
-      <section>
-        <h2>Add Income Source</h2>
+      <section className="panel">
+        <div className="section-heading">
+          <p className="eyebrow">New Record</p>
+          <h2>Add Income Source</h2>
+        </div>
 
-        <form onSubmit={handleSubmit}>
+        <form className="command-form" onSubmit={handleSubmit}>
           <label>
             Name
             <input
@@ -159,7 +187,9 @@ export function IncomePage() {
             />
           </label>
 
-          {error && <p>{error}</p>}
+          {error && (
+            <p className="status-message status-message--error">{error}</p>
+          )}
 
           <button type="submit" disabled={submitting}>
             {submitting ? "Adding..." : "Add income"}
@@ -167,20 +197,28 @@ export function IncomePage() {
         </form>
       </section>
 
-      <section>
-        <h2>Income Sources</h2>
+      <section className="panel">
+        <div className="section-heading">
+          <p className="eyebrow">Active Records</p>
+          <h2>Income Sources</h2>
+        </div>
 
         {loading ? (
-          <p>Loading income...</p>
+          <p className="status-message">Loading income...</p>
         ) : incomeSources.length === 0 ? (
-          <p>No active income sources yet.</p>
+          <p className="status-message">No active income sources yet.</p>
         ) : (
-          <ul>
+          <ul className="record-list">
             {incomeSources.map((source) => (
-              <li key={source.id}>
-                <strong>{source.name}</strong> — {formatCurrency(source.amount)}{" "}
-                / {source.frequency}
-                {source.notes && <p>{source.notes}</p>}
+              <li className="record-card" key={source.id}>
+                <div>
+                  <strong>{source.name}</strong>
+                  <p>
+                    {formatCurrency(source.amount)} / {source.frequency}
+                  </p>
+                  {source.notes && <p>{source.notes}</p>}
+                </div>
+
                 <button type="button" onClick={() => handleArchive(source.id)}>
                   Archive
                 </button>

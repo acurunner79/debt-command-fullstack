@@ -419,6 +419,36 @@ header h1 {
   color: #fecaca;
 }
 
+.metric-grid--compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.command-form {
+  max-width: 720px;
+}
+
+.record-list {
+  display: grid;
+  gap: 14px;
+}
+
+.record-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.record-card p {
+  color: var(--text-muted);
+}
+
+.record-card strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
 @media (max-width: 720px) {
   main,
   header {
@@ -449,5 +479,13 @@ header h1 {
     .metric-grid,
   .action-grid {
     grid-template-columns: 1fr;
+  }
+
+    .metric-grid--compact {
+    grid-template-columns: 1fr;
+  }
+
+  .record-card {
+    flex-direction: column;
   }
 }
