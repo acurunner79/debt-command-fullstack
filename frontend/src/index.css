@@ -547,3 +547,81 @@ header h1 {
   font-weight: 700;
   letter-spacing: 0.12em;
 }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.calendar-grid--header {
+  margin-bottom: 0.75rem;
+}
+
+.calendar-weekday {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.calendar-day {
+  min-height: 8rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.calendar-day--muted {
+  opacity: 0.35;
+}
+
+.calendar-day > strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+.calendar-bill {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.5rem;
+  border-left: 2px solid rgba(56, 189, 248, 0.75);
+  padding-left: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.calendar-bill span {
+  color: var(--color-text);
+}
+
+.calendar-bill strong {
+  color: var(--color-accent);
+}
+
+.calendar-bill em {
+  color: #fbbf24;
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .calendar-grid {
+    gap: 0.45rem;
+  }
+
+  .calendar-day {
+    min-height: 6rem;
+    padding: 0.5rem;
+  }
+
+  .calendar-bill {
+    font-size: 0.7rem;
+  }
+}
