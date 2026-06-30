@@ -19,6 +19,7 @@ export function AppShell() {
           <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/income">Income</NavLink>
           <NavLink to="/bills">Bills</NavLink>
+          <NavLink to="/payoff-planner">Payoff Planner</NavLink>
         </nav>
 
         <button className="app-header__logout" type="button" onClick={logoutUser}>
