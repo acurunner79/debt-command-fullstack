@@ -29,3 +29,10 @@ export function archiveBill(id: string) {
     method: "DELETE",
   });
 }
+
+export function updateBillBalance(id: string, balance: number) {
+  return apiRequest<BillResponse>(`/bills/${id}/balance`, {
+    method: "PATCH",
+    body: JSON.stringify({ balance }),
+  });
+}

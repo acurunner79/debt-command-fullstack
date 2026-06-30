@@ -171,3 +171,43 @@ export async function archiveBill(req: AuthRequest, res: Response) {
 
   return res.json({ bill });
 }
+
+export async function updateBillBalance(req: AuthRequest, res: Response) {
+  if (!req.userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const id = req.params.id;
+  const { balance } = req.body;
+
+  if (typeof id !== "string") {
+    return res.status(400).json({ message: "Invalid bill id" });
+  }
+
+  const balanceNumber = Number(balance);
+
+  if (Number.isNaN(balanceNumber) || balanceNumber < 0) {
+    return res.status(400).json({ message: "Valid balance is required" });
+  }
+
+  const existingBill = await prisma.bill.findFirst({
+    where: {
+      id,
+      userId: req.userId,
+      active: true,
+    },
+  });
+
+  if (!existingBill) {
+    return res.status(404).json({ message: "Bill not found" });
+  }
+
+  const bill = await prisma.bill.update({
+    where: { id },
+    data: {
+      balance: balanceNumber,
+    },
+  });
+
+  return res.json({ bill });
+}

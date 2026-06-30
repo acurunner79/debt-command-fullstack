@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getBills } from "../services/billService";
+import { getBills, updateBillBalance } from "../services/billService";
 import type { Bill, BillType } from "../types/bill";
 import type { PayoffStrategy } from "../types/payoff";
 import { formatCurrency } from "../utils/currency";
@@ -23,6 +23,8 @@ export function PayoffPlannerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+    const [balanceUpdates, setBalanceUpdates] = useState<Record<string, string>>({});
+
   useEffect(() => {
     async function loadBills() {
       setError("");
@@ -41,14 +43,42 @@ export function PayoffPlannerPage() {
   }, []);
 
     function toggleDebtType(type: BillType) {
-    setIncludedDebtTypes((currentTypes) => {
-      if (currentTypes.includes(type)) {
-        return currentTypes.filter((currentType) => currentType !== type);
+      setIncludedDebtTypes((currentTypes) => {
+        if (currentTypes.includes(type)) {
+          return currentTypes.filter((currentType) => currentType !== type);
+        }
+
+        return [...currentTypes, type];
+      });
+    }
+
+    async function handleBalanceUpdate(billId: string) {
+      const nextBalance = Number(balanceUpdates[billId]);
+
+      if (Number.isNaN(nextBalance) || nextBalance < 0) {
+        setError("Enter a valid balance before updating.");
+        return;
       }
 
-      return [...currentTypes, type];
-    });
-  }
+      setError("");
+
+      try {
+        const response = await updateBillBalance(billId, nextBalance);
+
+        setBills((currentBills) =>
+          currentBills.map((bill) =>
+            bill.id === billId ? response.bill : bill
+          )
+        );
+
+        setBalanceUpdates((currentUpdates) => ({
+          ...currentUpdates,
+          [billId]: "",
+        }));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to update balance");
+      }
+    }
 
     const filteredBills = useMemo(() => {
         return bills.filter((bill) => includedDebtTypes.includes(bill.type));
@@ -220,6 +250,33 @@ export function PayoffPlannerPage() {
                       </strong>
                       <p>{item.type}</p>
                       <p>Starting Balance: {formatCurrency(item.startingBalance)}</p>
+
+                        <div className="command-form">
+                          <label>
+                            Update Balance
+                            <input
+                              value={balanceUpdates[item.billId] ?? ""}
+                              onChange={(event) =>
+                                setBalanceUpdates((currentUpdates) => ({
+                                  ...currentUpdates,
+                                  [item.billId]: event.target.value,
+                                }))
+                              }
+                              placeholder={String(item.startingBalance)}
+                              type="number"
+                              min="0"
+                              step="0.01"
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => handleBalanceUpdate(item.billId)}
+                          >
+                            Save Balance
+                          </button>
+                        </div>
+
                       <p>
                         Monthly Payment Applied:{" "}
                         {formatCurrency(item.monthlyPaymentApplied)}
