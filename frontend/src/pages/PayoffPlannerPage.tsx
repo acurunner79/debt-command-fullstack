@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getBills } from "../services/billService";
-import type { Bill } from "../types/bill";
+import type { Bill, BillType } from "../types/bill";
 import type { PayoffStrategy } from "../types/payoff";
 import { formatCurrency } from "../utils/currency";
 import {
@@ -12,6 +12,14 @@ export function PayoffPlannerPage() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [strategy, setStrategy] = useState<PayoffStrategy>("SNOWBALL");
   const [extraPayment, setExtraPayment] = useState("100");
+  const [includedDebtTypes, setIncludedDebtTypes] = useState<BillType[]>([
+    "CREDIT_CARD",
+    "AUTO_LOAN",
+    "PERSONAL_LOAN",
+    "STUDENT_LOAN",
+    "MEDICAL",
+    "OTHER",
+  ]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -32,11 +40,29 @@ export function PayoffPlannerPage() {
     loadBills();
   }, []);
 
-  const payoffDebts = useMemo(() => getPayoffDebts(bills), [bills]);
+    function toggleDebtType(type: BillType) {
+    setIncludedDebtTypes((currentTypes) => {
+      if (currentTypes.includes(type)) {
+        return currentTypes.filter((currentType) => currentType !== type);
+      }
 
-  const payoffTimeline = useMemo(() => {
-    return calculatePayoffTimeline(bills, strategy, Number(extraPayment || 0));
-  }, [bills, strategy, extraPayment]);
+      return [...currentTypes, type];
+    });
+  }
+
+    const filteredBills = useMemo(() => {
+        return bills.filter((bill) => includedDebtTypes.includes(bill.type));
+    }, [bills, includedDebtTypes]);
+
+    const payoffDebts = useMemo(() => getPayoffDebts(filteredBills), [filteredBills]);
+
+    const payoffTimeline = useMemo(() => {
+        return calculatePayoffTimeline(
+        filteredBills,
+        strategy,
+        Number(extraPayment || 0)
+        );
+    }, [filteredBills, strategy, extraPayment]);
 
   return (
     <main className="page payoff-page">
@@ -90,7 +116,37 @@ export function PayoffPlannerPage() {
                 />
               </label>
             </form>
-          </section>
+
+                <div className="section-heading">
+                <p className="eyebrow">Debt Scope</p>
+                <h3>Included Debt Types</h3>
+                </div>
+
+                <div className="action-grid">
+                {[
+                    "CREDIT_CARD",
+                    "AUTO_LOAN",
+                    "PERSONAL_LOAN",
+                    "MORTGAGE",
+                    "RENT",
+                    "UTILITY",
+                    "INSURANCE",
+                    "SUBSCRIPTION",
+                    "MEDICAL",
+                    "STUDENT_LOAN",
+                    "OTHER",
+                ].map((type) => (
+                    <label className="checkbox-field" key={type}>
+                    <input
+                        checked={includedDebtTypes.includes(type as BillType)}
+                        onChange={() => toggleDebtType(type as BillType)}
+                        type="checkbox"
+                    />
+                    {type.replaceAll("_", " ")}
+                    </label>
+                ))}
+                </div>
+            </section>
 
           <section className="panel">
             <div className="section-heading">
