@@ -9,6 +9,7 @@ import { AppShell } from "./components/AppShell";
 import { PayoffPlannerPage } from "./pages/PayoffPlannerPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
+import { PaymentsPage } from "./pages/PaymentsPage";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/payoff-planner" element={<PayoffPlannerPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/payments" element={<PaymentsPage />} />
         </Route>
       </Route>
 

@@ -75,6 +75,8 @@ model Payment {
   @@unique([billId, month, year])
 }
 
+
+
 model PayoffScenario {
   id                String   @id @default(cuid())
   userId            String
