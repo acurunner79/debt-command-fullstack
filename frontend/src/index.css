@@ -529,3 +529,21 @@ header h1 {
     flex-direction: column;
   }
 }
+
+.record-card--target {
+  border-color: rgba(245, 158, 11, 0.85);
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.18);
+  position: relative;
+  padding-top: 3.25rem;
+}
+
+.record-card--target::before {
+  content: "CURRENT TARGET";
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  color: #fbbf24;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}

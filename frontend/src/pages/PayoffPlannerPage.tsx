@@ -214,6 +214,16 @@ export function PayoffPlannerPage() {
               </article>
 
               <article className="metric-card">
+                <span className="metric-card__label">Extra Payment Impact</span>
+                <strong className="metric-card__value">
+                  {formatCurrency(payoffTimeline.extraMonthlyPayment)}
+                </strong>
+                <p>
+                  Added monthly attack payment applied to the current target debt.
+                </p>
+              </article>
+
+              <article className="metric-card">
                 <span className="metric-card__label">Estimated Timeline</span>
                 <strong className="metric-card__value">
                   {payoffTimeline.estimatedTotalMonths} months
@@ -243,11 +253,25 @@ export function PayoffPlannerPage() {
             ) : (
               <ul className="record-list">
                 {payoffTimeline.timeline.map((item) => (
-                  <li className="record-card" key={item.billId}>
+                  <li
+                    className={
+                      item.priority === 1
+                        ? "record-card record-card--target"
+                        : "record-card"
+                    }
+                    key={item.billId}
+                  >
                     <div>
                       <strong>
                         #{item.priority} · {item.name}
                       </strong>
+
+                      {item.priority === 1 && (
+                        <p className="status-message">
+                          Focus extra payments here first. Keep paying minimums on all other included debts.
+                        </p>
+                      )}
+
                       <p>{item.type}</p>
                       <p>Starting Balance: {formatCurrency(item.startingBalance)}</p>
 
