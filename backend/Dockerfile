@@ -11,6 +11,9 @@ RUN npm ci
 
 COPY src ./src
 
+ARG DATABASE_URL=postgresql://debt_command_user:placeholder@postgresql:5432/debt_command
+ENV DATABASE_URL=$DATABASE_URL
+
 RUN npx prisma generate
 RUN npm run build
 
