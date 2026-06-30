@@ -7,6 +7,17 @@ import {
   calculatePayoffTimeline,
   getPayoffDebts,
 } from "../utils/payoffCalculations";
+import type {
+  PayoffScenario,
+  ParsedPayoffScenario,
+} from "../types/payoffScenario";
+import {
+  createPayoffScenario,
+  deletePayoffScenario,
+  getPayoffScenarios,
+} from "../services/payoffScenarioService";
+
+
 
 export function PayoffPlannerPage() {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -23,23 +34,42 @@ export function PayoffPlannerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-    const [balanceUpdates, setBalanceUpdates] = useState<Record<string, string>>({});
+  const [balanceUpdates, setBalanceUpdates] = useState<Record<string, string>>({});
+
+  const [scenarioName, setScenarioName] = useState("");
+  const [savedScenarios, setSavedScenarios] = useState<ParsedPayoffScenario[]>([]);
+
+  function parseScenario(scenario: PayoffScenario): ParsedPayoffScenario {
+    return {
+      ...scenario,
+      strategy: scenario.strategy,
+      extraPayment: Number(scenario.extraPayment || 0),
+      includedDebtTypes: JSON.parse(scenario.includedDebtTypes),
+    };
+  }
 
   useEffect(() => {
-    async function loadBills() {
+    async function loadPlannerData() {
       setError("");
 
       try {
-        const response = await getBills();
-        setBills(response.bills);
+        const [billsResponse, scenariosResponse] = await Promise.all([
+          getBills(),
+          getPayoffScenarios(),
+        ]);
+
+        setBills(billsResponse.bills);
+        setSavedScenarios(scenariosResponse.scenarios.map(parseScenario));
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load bills");
+        setError(
+          err instanceof Error ? err.message : "Failed to load planner data"
+        );
       } finally {
         setLoading(false);
       }
     }
 
-    loadBills();
+    loadPlannerData();
   }, []);
 
     function toggleDebtType(type: BillType) {
@@ -80,6 +110,56 @@ export function PayoffPlannerPage() {
       }
     }
 
+    async function handleSaveScenario() {
+      if (!scenarioName.trim()) {
+        setError("Enter a scenario name before saving.");
+        return;
+      }
+
+      setError("");
+
+      try {
+        const response = await createPayoffScenario({
+          name: scenarioName.trim(),
+          strategy,
+          extraPayment: Number(extraPayment || 0),
+          includedDebtTypes,
+        });
+
+        setSavedScenarios((currentScenarios) => [
+          parseScenario(response.scenario),
+          ...currentScenarios,
+        ]);
+
+        setScenarioName("");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to save scenario");
+      }
+    }
+
+    function handleLoadScenario(scenario: ParsedPayoffScenario) {
+      setStrategy(scenario.strategy);
+      setExtraPayment(String(scenario.extraPayment));
+      setIncludedDebtTypes(scenario.includedDebtTypes);
+      setError("");
+    }
+
+    async function handleDeleteScenario(scenarioId: string) {
+      setError("");
+
+      try {
+        await deletePayoffScenario(scenarioId);
+
+        setSavedScenarios((currentScenarios) =>
+          currentScenarios.filter((scenario) => scenario.id !== scenarioId)
+        );
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to delete scenario"
+        );
+      }
+    }
+
     const filteredBills = useMemo(() => {
         return bills.filter((bill) => includedDebtTypes.includes(bill.type));
     }, [bills, includedDebtTypes]);
@@ -111,6 +191,67 @@ export function PayoffPlannerPage() {
         <p className="status-message">Loading payoff planner...</p>
       ) : (
         <>
+          <section className="panel">
+            <div className="section-heading">
+              <p className="eyebrow">Saved Plans</p>
+              <h2>Scenario Control</h2>
+            </div>
+
+            <div className="command-form">
+              <label>
+                Scenario Name
+                <input
+                  value={scenarioName}
+                  onChange={(event) => setScenarioName(event.target.value)}
+                  placeholder="Credit Card Attack Plan"
+                  type="text"
+                />
+              </label>
+
+              <button type="button" onClick={handleSaveScenario}>
+                Save Current Scenario
+              </button>
+            </div>
+
+            {savedScenarios.length === 0 ? (
+              <p className="status-message">No saved scenarios yet.</p>
+            ) : (
+              <ul className="record-list">
+                {savedScenarios.map((scenario) => (
+                  <li className="record-card" key={scenario.id}>
+                    <div>
+                      <strong>{scenario.name}</strong>
+                      <p>Strategy: {scenario.strategy}</p>
+                      <p>Extra Payment: {formatCurrency(scenario.extraPayment)}</p>
+                      <p>
+                        Included Types:{" "}
+                        {scenario.includedDebtTypes
+                          .map((type) => type.replaceAll("_", " "))
+                          .join(", ")}
+                      </p>
+
+                      <div className="command-form">
+                        <button
+                          type="button"
+                          onClick={() => handleLoadScenario(scenario)}
+                        >
+                          Load Scenario
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteScenario(scenario.id)}
+                        >
+                          Delete Scenario
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+          
           <section className="panel">
             <div className="section-heading">
               <p className="eyebrow">Scenario Controls</p>

@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { authRoutes } from "./routes/authRoutes.js";
 import { incomeRoutes } from "./routes/incomeRoutes.js";
 import { billRoutes } from "./routes/billRoutes.js";
+import { payoffScenarioRoutes } from "./routes/payoffScenarioRoutes.js";
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/income", incomeRoutes);
 app.use("/api/bills", billRoutes);
+app.use("/api/payoff-scenarios", payoffScenarioRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });
