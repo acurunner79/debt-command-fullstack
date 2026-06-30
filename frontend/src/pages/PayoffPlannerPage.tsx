@@ -4,8 +4,7 @@ import type { Bill } from "../types/bill";
 import type { PayoffStrategy } from "../types/payoff";
 import { formatCurrency } from "../utils/currency";
 import {
-  calculatePayoffPlan,
-  calculateTotalDebtMinimums,
+  calculatePayoffTimeline,
   getPayoffDebts,
 } from "../utils/payoffCalculations";
 
@@ -35,15 +34,9 @@ export function PayoffPlannerPage() {
 
   const payoffDebts = useMemo(() => getPayoffDebts(bills), [bills]);
 
-  const payoffPlan = useMemo(() => {
-    return calculatePayoffPlan(bills, strategy);
-  }, [bills, strategy]);
-
-  const totalMinimums = useMemo(() => {
-    return calculateTotalDebtMinimums(bills);
-  }, [bills]);
-
-  const totalMonthlyPayoffAmount = totalMinimums + Number(extraPayment || 0);
+  const payoffTimeline = useMemo(() => {
+    return calculatePayoffTimeline(bills, strategy, Number(extraPayment || 0));
+  }, [bills, strategy, extraPayment]);
 
   return (
     <main className="page payoff-page">
@@ -77,7 +70,9 @@ export function PayoffPlannerPage() {
                     setStrategy(event.target.value as PayoffStrategy)
                   }
                 >
-                  <option value="SNOWBALL">Snowball — Smallest balance first</option>
+                  <option value="SNOWBALL">
+                    Snowball — Smallest balance first
+                  </option>
                   <option value="AVALANCHE">
                     Avalanche — Highest interest first
                   </option>
@@ -112,16 +107,37 @@ export function PayoffPlannerPage() {
               </article>
 
               <article className="metric-card">
+                <span className="metric-card__label">Starting Debt</span>
+                <strong className="metric-card__value">
+                  {formatCurrency(payoffTimeline.totalStartingDebt)}
+                </strong>
+              </article>
+
+              <article className="metric-card">
                 <span className="metric-card__label">Minimum Payments</span>
                 <strong className="metric-card__value">
-                  {formatCurrency(totalMinimums)}
+                  {formatCurrency(payoffTimeline.totalMinimumPayments)}
                 </strong>
               </article>
 
               <article className="metric-card metric-card--accent">
                 <span className="metric-card__label">Total Payoff Budget</span>
                 <strong className="metric-card__value">
-                  {formatCurrency(totalMonthlyPayoffAmount)}
+                  {formatCurrency(payoffTimeline.totalMonthlyPayoffAmount)}
+                </strong>
+              </article>
+
+              <article className="metric-card">
+                <span className="metric-card__label">Estimated Timeline</span>
+                <strong className="metric-card__value">
+                  {payoffTimeline.estimatedTotalMonths} months
+                </strong>
+              </article>
+
+              <article className="metric-card metric-card--accent">
+                <span className="metric-card__label">Debt-Free Estimate</span>
+                <strong className="metric-card__value">
+                  {payoffTimeline.estimatedDebtFreeDate || "N/A"}
                 </strong>
               </article>
             </div>
@@ -129,26 +145,35 @@ export function PayoffPlannerPage() {
 
           <section className="panel">
             <div className="section-heading">
-              <p className="eyebrow">Attack Order</p>
-              <h2>Recommended Payoff Plan</h2>
+              <p className="eyebrow">Timeline Projection</p>
+              <h2>Estimated Payoff Path</h2>
             </div>
 
-            {payoffPlan.length === 0 ? (
+            {payoffTimeline.timeline.length === 0 ? (
               <p className="status-message">
                 No active debts with balances found. Add bill balances to create
-                a payoff plan.
+                a payoff timeline.
               </p>
             ) : (
               <ul className="record-list">
-                {payoffPlan.map((item) => (
+                {payoffTimeline.timeline.map((item) => (
                   <li className="record-card" key={item.billId}>
                     <div>
                       <strong>
                         #{item.priority} · {item.name}
                       </strong>
                       <p>{item.type}</p>
-                      <p>Balance: {formatCurrency(item.balance)}</p>
-                      <p>Minimum: {formatCurrency(item.minimumPayment)}</p>
+                      <p>Starting Balance: {formatCurrency(item.startingBalance)}</p>
+                      <p>
+                        Monthly Payment Applied:{" "}
+                        {formatCurrency(item.monthlyPaymentApplied)}
+                      </p>
+                      <p>Estimated Time: {item.estimatedMonths} months</p>
+                      <p>Estimated Payoff: {item.estimatedPayoffDate}</p>
+                      <p>
+                        Remaining Debt After Payoff:{" "}
+                        {formatCurrency(item.remainingDebtAfterPayoff)}
+                      </p>
                       <p>Interest Rate: {item.interestRate.toFixed(2)}%</p>
                       <p>{item.strategyReason}</p>
                     </div>

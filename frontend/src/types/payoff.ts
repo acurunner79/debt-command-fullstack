@@ -18,3 +18,21 @@ export type PayoffPlanItem = {
   priority: number;
   strategyReason: string;
 };
+
+export type PayoffTimelineItem = PayoffPlanItem & {
+  startingBalance: number;
+  monthlyPaymentApplied: number;
+  estimatedMonths: number;
+  estimatedPayoffDate: string;
+  remainingDebtAfterPayoff: number;
+};
+
+export type PayoffTimelineSummary = {
+  totalStartingDebt: number;
+  totalMinimumPayments: number;
+  extraMonthlyPayment: number;
+  totalMonthlyPayoffAmount: number;
+  estimatedTotalMonths: number;
+  estimatedDebtFreeDate: string | null;
+  timeline: PayoffTimelineItem[];
+};
