@@ -1,0 +1,21 @@
+services:
+  debt-command-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: debt-command-api
+    restart: unless-stopped
+    ports:
+      - "3013:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://debt_command_user:REPLACE_WITH_PASSWORD@postgresql:5432/debt_command
+      JWT_SECRET: REPLACE_WITH_LONG_RANDOM_SECRET
+      FRONTEND_ORIGIN: https://debt.jorgesotocoder.com
+    networks:
+      - homelab-apps
+
+networks:
+  homelab-apps:
+    external: true
