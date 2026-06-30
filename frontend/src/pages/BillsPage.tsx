@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState, type ComponentProps } from "react";
-import { archiveBill, createBill, getBills } from "../services/billService";
+import {
+  archiveBill,
+  createBill,
+  getBills,
+  updateBillBalance,
+} from "../services/billService";
 import type { Bill, BillType } from "../types/bill";
 import { formatCurrency } from "../utils/currency";
 import {
@@ -39,6 +44,7 @@ export function BillsPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [balanceUpdates, setBalanceUpdates] = useState<Record<string, string>>({});
 
   const totalMinimumPayments = useMemo(
     () => calculateTotalMinimumPayments(bills),
@@ -131,6 +137,34 @@ export function BillsPage() {
       await loadBills();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to archive bill");
+    }
+  }
+
+  async function handleBalanceUpdate(billId: string) {
+    const nextBalance = Number(balanceUpdates[billId]);
+
+    if (Number.isNaN(nextBalance) || nextBalance < 0) {
+      setError("Enter a valid balance before updating.");
+      return;
+    }
+
+    setError("");
+
+    try {
+      const response = await updateBillBalance(billId, nextBalance);
+
+      setBills((currentBills) =>
+        currentBills.map((bill) =>
+          bill.id === billId ? response.bill : bill
+        )
+      );
+
+      setBalanceUpdates((currentUpdates) => ({
+        ...currentUpdates,
+        [billId]: "",
+      }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update balance");
     }
   }
 
@@ -318,6 +352,30 @@ export function BillsPage() {
                     {bill.type} · Due day {bill.dueDay}
                   </p>
                   <p>Balance: {formatCurrency(bill.balance || 0)}</p>
+
+                  <div className="command-form">
+                    <label>
+                      Update Balance
+                      <input
+                        value={balanceUpdates[bill.id] ?? ""}
+                        onChange={(event) =>
+                          setBalanceUpdates((currentUpdates) => ({
+                            ...currentUpdates,
+                            [bill.id]: event.target.value,
+                          }))
+                        }
+                        placeholder={String(bill.balance || 0)}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                      />
+                    </label>
+
+                    <button type="button" onClick={() => handleBalanceUpdate(bill.id)}>
+                      Save Balance
+                    </button>
+                  </div>
+
                   <p>Minimum: {formatCurrency(bill.minimumPayment)}</p>
                   {bill.creditLimit && (
                     <p>Credit Limit: {formatCurrency(bill.creditLimit)}</p>
