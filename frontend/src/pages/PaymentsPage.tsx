@@ -62,6 +62,8 @@ export function PaymentsPage() {
   const [status, setStatus] = useState<PaymentStatus>("PAID");
   const [notes, setNotes] = useState("");
   const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
+  const [paymentPendingDelete, setPaymentPendingDelete] =
+  useState<Payment | null>(null);
 
   const [historyStatusFilter, setHistoryStatusFilter] =
     useState<"ALL" | PaymentStatus>("ALL");
@@ -279,12 +281,8 @@ export function PaymentsPage() {
     }
   };
 
-  async function handleDeletePayment(id: string) {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this payment? This action cannot be undone."
-    );
-
-    if (!confirmed) {
+  async function confirmDeletePayment() {
+    if (!paymentPendingDelete) {
       return;
     }
 
@@ -292,7 +290,8 @@ export function PaymentsPage() {
     setSuccess("");
 
     try {
-      await deletePayment(id);
+      await deletePayment(paymentPendingDelete.id);
+      setPaymentPendingDelete(null);
       setSuccess("Payment deleted successfully.");
       await refreshPaymentData();
     } catch (err) {
@@ -638,6 +637,8 @@ export function PaymentsPage() {
               </button>
             </div>
 
+            
+
             {sortedFilteredPayments.length === 0 ? (
               <p className="status-message">
                 No payments match the current filters.
@@ -704,10 +705,37 @@ export function PaymentsPage() {
 
                         <button
                           type="button"
-                          onClick={() => handleDeletePayment(payment.id)}
+                          onClick={() => {
+                            setPaymentPendingDelete(payment);
+                            setError("");
+                            setSuccess("");
+                          }}
                         >
                           Delete
                         </button>
+
+                        {paymentPendingDelete?.id === payment.id && (
+                          <div className="status-message status-message--error">
+                            <p>
+                              Delete this payment for <strong>{payment.bill.name}</strong>?
+                            </p>
+
+                            <p>
+                              {payment.month}/{payment.year} · {formatCurrency(payment.amountPaid)}
+                            </p>
+
+                            <button type="button" onClick={confirmDeletePayment}>
+                              Confirm Delete
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setPaymentPendingDelete(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </li>
                   ))}
