@@ -198,6 +198,24 @@ export function PaymentsPage() {
     }, 0);
   }, [filteredPayments]);
 
+  const filteredAveragePayment = useMemo(() => {
+    if (filteredPayments.length === 0) {
+      return 0;
+    }
+
+    return filteredTotalPaid / filteredPayments.length;
+  }, [filteredPayments.length, filteredTotalPaid]);
+
+  const filteredHighestPayment = useMemo(() => {
+    if (filteredPayments.length === 0) {
+      return 0;
+    }
+
+    return Math.max(
+      ...filteredPayments.map((payment) => Number(payment.amountPaid || 0))
+    );
+  }, [filteredPayments]);
+
   function startEditingPayment(payment: Payment) {
     setEditingPaymentId(payment.id);
     setBillId(payment.billId);
@@ -560,11 +578,35 @@ export function PaymentsPage() {
               </p>
             ) : (
               <>
-                <p className="status-message">
-                  Showing {sortedFilteredPayments.length} payment
-                  {sortedFilteredPayments.length === 1 ? "" : "s"} · Filtered
-                  total: {formatCurrency(filteredTotalPaid)}
-                </p>
+                <div className="metric-grid metric-grid--compact">
+                  <article className="metric-card">
+                    <span className="metric-card__label">Filtered Payments</span>
+                    <strong className="metric-card__value">
+                      {sortedFilteredPayments.length}
+                    </strong>
+                  </article>
+
+                  <article className="metric-card metric-card--accent">
+                    <span className="metric-card__label">Filtered Total</span>
+                    <strong className="metric-card__value">
+                      {formatCurrency(filteredTotalPaid)}
+                    </strong>
+                  </article>
+
+                  <article className="metric-card">
+                    <span className="metric-card__label">Average Payment</span>
+                    <strong className="metric-card__value">
+                      {formatCurrency(filteredAveragePayment)}
+                    </strong>
+                  </article>
+
+                  <article className="metric-card">
+                    <span className="metric-card__label">Highest Payment</span>
+                    <strong className="metric-card__value">
+                      {formatCurrency(filteredHighestPayment)}
+                    </strong>
+                  </article>
+                </div>
 
                 <h2>- Results -</h2>
 
