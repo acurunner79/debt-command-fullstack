@@ -21,3 +21,9 @@ export function deletePayoffScenario(id: string) {
     method: "DELETE",
   });
 }
+
+export function setDefaultPayoffScenario(id: string) {
+  return apiRequest<PayoffScenarioResponse>(`/payoff-scenarios/${id}/default`, {
+    method: "PATCH",
+  });
+}

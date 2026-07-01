@@ -24,7 +24,7 @@ export async function createPayoffScenario(req: AuthRequest, res: Response) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const { name, strategy, extraPayment, includedDebtTypes } = req.body;
+  const { name, strategy, extraPayment, includedDebtTypes, isDefault } = req.body;
 
   if (!name || !strategy || !Array.isArray(includedDebtTypes)) {
     return res.status(400).json({
@@ -39,6 +39,7 @@ export async function createPayoffScenario(req: AuthRequest, res: Response) {
       strategy,
       extraPayment: Number(extraPayment || 0),
       includedDebtTypes: JSON.stringify(includedDebtTypes),
+      isDefault: Boolean(isDefault),
     },
   });
 
@@ -74,4 +75,47 @@ export async function deletePayoffScenario(req: AuthRequest, res: Response) {
   });
 
   return res.json({ scenario: existingScenario });
+}
+
+export async function setDefaultPayoffScenario(req: AuthRequest, res: Response) {
+  if (!req.userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const id = req.params.id;
+
+  if (typeof id !== "string") {
+    return res.status(400).json({ message: "Invalid scenario id" });
+  }
+
+  const existingScenario = await prisma.payoffScenario.findFirst({
+    where: {
+      id,
+      userId: req.userId,
+    },
+  });
+
+  if (!existingScenario) {
+    return res.status(404).json({ message: "Scenario not found" });
+  }
+
+  await prisma.payoffScenario.updateMany({
+    where: {
+      userId: req.userId,
+    },
+    data: {
+      isDefault: false,
+    },
+  });
+
+  const scenario = await prisma.payoffScenario.update({
+    where: {
+      id,
+    },
+    data: {
+      isDefault: true,
+    },
+  });
+
+  return res.json({ scenario });
 }

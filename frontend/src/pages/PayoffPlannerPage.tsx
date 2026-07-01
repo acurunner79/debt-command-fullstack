@@ -15,6 +15,7 @@ import {
   createPayoffScenario,
   deletePayoffScenario,
   getPayoffScenarios,
+  setDefaultPayoffScenario,
 } from "../services/payoffScenarioService";
 
 
@@ -160,6 +161,26 @@ export function PayoffPlannerPage() {
       }
     }
 
+    async function handleSetDefaultScenario(scenarioId: string) {
+      setError("");
+
+      try {
+        const response = await setDefaultPayoffScenario(scenarioId);
+        const updatedScenario = parseScenario(response.scenario);
+
+        setSavedScenarios((currentScenarios) =>
+          currentScenarios.map((scenario) => ({
+            ...scenario,
+            isDefault: scenario.id === updatedScenario.id,
+          }))
+        );
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to set default scenario"
+        );
+      }
+    }
+
     const filteredBills = useMemo(() => {
         return bills.filter((bill) => includedDebtTypes.includes(bill.type));
     }, [bills, includedDebtTypes]);
@@ -236,7 +257,9 @@ export function PayoffPlannerPage() {
                 {savedScenarios.map((scenario) => (
                   <li className="record-card" key={scenario.id}>
                     <div>
-                      <strong>{scenario.name}</strong>
+                      <strong>
+                        {scenario.name} {scenario.isDefault ? "· Default" : ""}
+                      </strong>
                       <p>Strategy: {scenario.strategy}</p>
                       <p>Extra Payment: {formatCurrency(scenario.extraPayment)}</p>
                       <p>
@@ -252,6 +275,14 @@ export function PayoffPlannerPage() {
                           onClick={() => handleLoadScenario(scenario)}
                         >
                           Load Scenario
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSetDefaultScenario(scenario.id)}
+                          disabled={scenario.isDefault}
+                        >
+                          {scenario.isDefault ? "Default Scenario" : "Set Default"}
                         </button>
 
                         <button

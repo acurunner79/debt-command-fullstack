@@ -8,6 +8,7 @@ export type PayoffScenario = {
   strategy: PayoffStrategy;
   extraPayment: string;
   includedDebtTypes: string;
+  isDefault: boolean;
   createdAt: string;
   updatedAt: string;
 };

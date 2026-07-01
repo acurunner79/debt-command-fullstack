@@ -81,7 +81,8 @@ export function DashboardPage() {
     return calculateCreditUtilization(bills);
   }, [bills]);
 
-  const defaultPayoffScenario = savedScenarios[0];
+  const defaultPayoffScenario =
+  savedScenarios.find((scenario) => scenario.isDefault) || savedScenarios[0];
 
   const dashboardPayoffTimeline = useMemo(() => {
     if (defaultPayoffScenario) {

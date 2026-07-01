@@ -84,6 +84,7 @@ model PayoffScenario {
   strategy          String
   extraPayment      Decimal  @default(0)
   includedDebtTypes String
+  isDefault         Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
