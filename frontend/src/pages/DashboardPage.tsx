@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { getBills } from "../services/billService";
 import { getIncomeSources } from "../services/incomeService";
 import { getPayoffScenarios } from "../services/payoffScenarioService";
+import { getPayments } from "../services/paymentService";
+import type { Payment } from "../types/payment";
+import { getAutomationNotifications } from "../utils/automationUtils";
 import type { Bill } from "../types/bill";
 import type { IncomeSource } from "../types/income";
 import type {
@@ -24,6 +27,7 @@ export function DashboardPage() {
   const [savedScenarios, setSavedScenarios] = useState<ParsedPayoffScenario[]>(
     []
   );
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -41,16 +45,18 @@ export function DashboardPage() {
       setError("");
 
       try {
-        const [incomeResponse, billsResponse, scenariosResponse] =
+        const [incomeResponse, billsResponse, scenariosResponse, paymentsResponse] =
           await Promise.all([
             getIncomeSources(),
             getBills(),
             getPayoffScenarios(),
+            getPayments(),
           ]);
 
         setIncomeSources(incomeResponse.incomeSources);
         setBills(billsResponse.bills);
         setSavedScenarios(scenariosResponse.scenarios.map(parseScenario));
+        setPayments(paymentsResponse.payments);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load dashboard data"
@@ -112,6 +118,14 @@ export function DashboardPage() {
 
     return calculatePayoffTimeline(defaultBills, "SNOWBALL", 100);
   }, [bills, defaultPayoffScenario]);
+
+  const automationNotices = useMemo(() => {
+    return getAutomationNotifications({
+      bills,
+      payments,
+      savedScenarios,
+    }).slice(0, 3);
+  }, [bills, payments, savedScenarios]);
 
   return (
     <main className="page dashboard-page">
@@ -222,6 +236,37 @@ export function DashboardPage() {
                 </strong>
               </article>
             </div>
+          </section>
+
+          <section className="panel">
+            <div className="section-heading">
+              <p className="eyebrow">Automation Review</p>
+              <h2>Priority Notices</h2>
+            </div>
+
+            {automationNotices.length === 0 ? (
+              <p className="status-message">No priority notices right now.</p>
+            ) : (
+              <ul className="record-list">
+                {automationNotices.map((notice) => (
+                  <li
+                    className={`record-card notification-card notification-card--${notice.severity.toLowerCase()}`}
+                    key={notice.id}
+                  >
+                    <div>
+                      <strong>{notice.title}</strong>
+                      <p>{notice.message}</p>
+                      <p>Severity: {notice.severity}</p>
+                    </div>
+
+                    <Link className="action-card" to={notice.actionPath}>
+                      <span>{notice.actionLabel}</span>
+                      <strong>Open</strong>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           <section className="panel">
