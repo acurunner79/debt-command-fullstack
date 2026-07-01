@@ -11,13 +11,20 @@ import {
   createPayment,
   deletePayment,
   getPayments,
-  updatePayment
+  updatePayment,
 } from "../services/paymentService";
 import type { Bill } from "../types/bill";
 import type { Payment, PaymentStatus } from "../types/payment";
 import { formatCurrency } from "../utils/currency";
 
 type FormSubmitHandler = NonNullable<ComponentProps<"form">["onSubmit"]>;
+
+type PaymentHistorySort =
+  | "NEWEST"
+  | "OLDEST"
+  | "HIGHEST_AMOUNT"
+  | "LOWEST_AMOUNT"
+  | "BILL_NAME";
 
 const paymentStatusOptions: PaymentStatus[] = [
   "PAID",
@@ -56,10 +63,17 @@ export function PaymentsPage() {
   const [notes, setNotes] = useState("");
   const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
 
-  const [historyStatusFilter, setHistoryStatusFilter] = useState<"ALL" | PaymentStatus>("ALL");
-  const [historyMonthFilter, setHistoryMonthFilter] = useState(String(currentMonth));
-  const [historyYearFilter, setHistoryYearFilter] = useState(String(currentYear));
+  const [historyStatusFilter, setHistoryStatusFilter] =
+    useState<"ALL" | PaymentStatus>("ALL");
+  const [historyMonthFilter, setHistoryMonthFilter] = useState(
+    String(currentMonth)
+  );
+  const [historyYearFilter, setHistoryYearFilter] = useState(
+    String(currentYear)
+  );
   const [historyBillFilter, setHistoryBillFilter] = useState("ALL");
+  const [historySort, setHistorySort] =
+    useState<PaymentHistorySort>("NEWEST");
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -68,12 +82,12 @@ export function PaymentsPage() {
 
   useEffect(() => {
     async function loadInitialPaymentData() {
-        setError("");
+      setError("");
 
-        try {
+      try {
         const [paymentsResponse, billsResponse] = await Promise.all([
-            getPayments(),
-            getBills(),
+          getPayments(),
+          getBills(),
         ]);
 
         setPayments(paymentsResponse.payments);
@@ -87,11 +101,11 @@ export function PaymentsPage() {
           setBillId(selectedBill.id);
           setAmountPaid(String(selectedBill.minimumPayment));
         }
-        } catch (err) {
+      } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load payments");
-        } finally {
+      } finally {
         setLoading(false);
-        }
+      }
     }
 
     loadInitialPaymentData();
@@ -101,17 +115,17 @@ export function PaymentsPage() {
     setError("");
 
     try {
-        const [paymentsResponse, billsResponse] = await Promise.all([
+      const [paymentsResponse, billsResponse] = await Promise.all([
         getPayments(),
         getBills(),
-        ]);
+      ]);
 
-        setPayments(paymentsResponse.payments);
-        setBills(billsResponse.bills);
+      setPayments(paymentsResponse.payments);
+      setBills(billsResponse.bills);
     } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load payments");
+      setError(err instanceof Error ? err.message : "Failed to load payments");
     }
-    }
+  }
 
   const totalPaid = useMemo(() => {
     return payments.reduce((total, payment) => {
@@ -121,29 +135,62 @@ export function PaymentsPage() {
 
   const currentMonthPayments = useMemo(() => {
     return payments.filter(
-        (payment) =>
-        payment.month === currentMonth &&
-        payment.year === currentYear
+      (payment) =>
+        payment.month === currentMonth && payment.year === currentYear
     );
-    }, [payments, currentMonth, currentYear]);
+  }, [payments, currentMonth, currentYear]);
 
   const filteredPayments = useMemo(() => {
     return payments.filter((payment) => {
       const matchesStatus =
-      historyStatusFilter === "ALL" || payment.status === historyStatusFilter;
+        historyStatusFilter === "ALL" || payment.status === historyStatusFilter;
 
-    const matchesMonth =
-      !historyMonthFilter || payment.month === Number(historyMonthFilter);
+      const matchesMonth =
+        !historyMonthFilter || payment.month === Number(historyMonthFilter);
 
-    const matchesYear =
-      !historyYearFilter || payment.year === Number(historyYearFilter);
+      const matchesYear =
+        !historyYearFilter || payment.year === Number(historyYearFilter);
 
-    const matchesBill =
-      historyBillFilter === "ALL" || payment.billId === historyBillFilter;
+      const matchesBill =
+        historyBillFilter === "ALL" || payment.billId === historyBillFilter;
 
-    return matchesStatus && matchesMonth && matchesYear && matchesBill;
+      return matchesStatus && matchesMonth && matchesYear && matchesBill;
     });
-  }, [payments, historyStatusFilter, historyMonthFilter, historyYearFilter, historyBillFilter]);
+  }, [
+    payments,
+    historyStatusFilter,
+    historyMonthFilter,
+    historyYearFilter,
+    historyBillFilter,
+  ]);
+
+  const sortedFilteredPayments = useMemo(() => {
+    return [...filteredPayments].sort((a, b) => {
+      if (historySort === "NEWEST") {
+        const aDate = a.paymentDate ? new Date(a.paymentDate).getTime() : 0;
+        const bDate = b.paymentDate ? new Date(b.paymentDate).getTime() : 0;
+
+        return bDate - aDate;
+      }
+
+      if (historySort === "OLDEST") {
+        const aDate = a.paymentDate ? new Date(a.paymentDate).getTime() : 0;
+        const bDate = b.paymentDate ? new Date(b.paymentDate).getTime() : 0;
+
+        return aDate - bDate;
+      }
+
+      if (historySort === "HIGHEST_AMOUNT") {
+        return Number(b.amountPaid || 0) - Number(a.amountPaid || 0);
+      }
+
+      if (historySort === "LOWEST_AMOUNT") {
+        return Number(a.amountPaid || 0) - Number(b.amountPaid || 0);
+      }
+
+      return a.bill.name.localeCompare(b.bill.name);
+    });
+  }, [filteredPayments, historySort]);
 
   const filteredTotalPaid = useMemo(() => {
     return filteredPayments.reduce((total, payment) => {
@@ -216,6 +263,7 @@ export function PaymentsPage() {
 
   async function handleDeletePayment(id: string) {
     setError("");
+    setSuccess("");
 
     try {
       await deletePayment(id);
@@ -237,15 +285,6 @@ export function PaymentsPage() {
       </header>
 
       {error && <p className="status-message status-message--error">{error}</p>}
-
-      {success && (
-        <div className="status-message">
-          <p>{success}</p>
-          {returnTo === "calendar" && (
-            <Link to={backToCalendarUrl}>Back to Calendar</Link>
-          )}
-        </div>
-      )}
 
       {loading ? (
         <p className="status-message">Loading payment ledger...</p>
@@ -450,7 +489,9 @@ export function PaymentsPage() {
                 <select
                   value={historyStatusFilter}
                   onChange={(event) =>
-                    setHistoryStatusFilter(event.target.value as "ALL" | PaymentStatus)
+                    setHistoryStatusFilter(
+                      event.target.value as "ALL" | PaymentStatus
+                    )
                   }
                 >
                   <option value="ALL">ALL</option>
@@ -483,6 +524,22 @@ export function PaymentsPage() {
                 />
               </label>
 
+              <label>
+                Sort
+                <select
+                  value={historySort}
+                  onChange={(event) =>
+                    setHistorySort(event.target.value as PaymentHistorySort)
+                  }
+                >
+                  <option value="NEWEST">Newest first</option>
+                  <option value="OLDEST">Oldest first</option>
+                  <option value="HIGHEST_AMOUNT">Highest amount</option>
+                  <option value="LOWEST_AMOUNT">Lowest amount</option>
+                  <option value="BILL_NAME">Bill name</option>
+                </select>
+              </label>
+
               <button
                 type="button"
                 onClick={() => {
@@ -490,57 +547,64 @@ export function PaymentsPage() {
                   setHistoryStatusFilter("ALL");
                   setHistoryMonthFilter("");
                   setHistoryYearFilter("");
+                  setHistorySort("NEWEST");
                 }}
               >
                 Clear Filters
               </button>
             </div>
 
-            {filteredPayments.length === 0 ? (
-              <p className="status-message">No payments match the current filters.</p>
+            {sortedFilteredPayments.length === 0 ? (
+              <p className="status-message">
+                No payments match the current filters.
+              </p>
             ) : (
               <>
                 <p className="status-message">
-                  Filtered total: {formatCurrency(filteredTotalPaid)}
+                  Showing {sortedFilteredPayments.length} payment
+                  {sortedFilteredPayments.length === 1 ? "" : "s"} · Filtered
+                  total: {formatCurrency(filteredTotalPaid)}
                 </p>
 
+                <h2>- Results -</h2>
+
                 <ul className="record-list">
-                  {filteredPayments.map((payment) => (
-                  <li className="record-card" key={payment.id}>
-                    <div>
-                      <strong>{payment.bill.name}</strong>
-                      <p>
-                        {payment.month}/{payment.year} · {payment.status}
-                      </p>
-                      <p>Amount Paid: {formatCurrency(payment.amountPaid)}</p>
-                      {payment.paymentDate && (
+                  {sortedFilteredPayments.map((payment) => (
+                    <li className="record-card" key={payment.id}>
+                      <div>
+                        <strong>{payment.bill.name}</strong>
                         <p>
-                          Payment Date:{" "}
-                          {new Date(payment.paymentDate).toLocaleDateString()}
+                          {payment.month}/{payment.year} · {payment.status}
                         </p>
-                      )}
-                      {payment.notes && <p>{payment.notes}</p>}
-                    </div>
+                        <p>Amount Paid: {formatCurrency(payment.amountPaid)}</p>
+                        {payment.paymentDate && (
+                          <p>
+                            Payment Date:{" "}
+                            {new Date(payment.paymentDate).toLocaleDateString()}
+                          </p>
+                        )}
+                        {payment.notes && <p>{payment.notes}</p>}
+                      </div>
 
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => startEditingPayment(payment)}
-                      >
-                        Edit
-                      </button>
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => startEditingPayment(payment)}
+                        >
+                          Edit
+                        </button>
 
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePayment(payment.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePayment(payment.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </section>
         </>
