@@ -4,6 +4,7 @@ import {
   useState,
   type ComponentProps,
 } from "react";
+import { useSearchParams } from "react-router-dom";
 import { getBills } from "../services/billService";
 import {
   createPayment,
@@ -25,15 +26,19 @@ const paymentStatusOptions: PaymentStatus[] = [
 ];
 
 export function PaymentsPage() {
+  const [searchParams] = useSearchParams();
   const today = useMemo(() => new Date(), []);
   const currentMonth = today.getMonth() + 1;
   const currentYear = today.getFullYear();
+  const prefillBillId = searchParams.get("billId");
+  const prefillMonth = searchParams.get("month");
+  const prefillYear = searchParams.get("year");
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
-  const [billId, setBillId] = useState("");
-  const [month, setMonth] = useState(String(today.getMonth() + 1));
-  const [year, setYear] = useState(String(today.getFullYear()));
+  const [billId, setBillId] = useState(prefillBillId || "");
+  const [month, setMonth] = useState(prefillMonth || String(currentMonth));
+  const [year, setYear] = useState(prefillYear || String(currentYear));
   const [amountPaid, setAmountPaid] = useState("");
   const [paymentDate, setPaymentDate] = useState(
     today.toISOString().slice(0, 10)
@@ -58,8 +63,12 @@ export function PaymentsPage() {
         setBills(billsResponse.bills);
 
         if (billsResponse.bills.length > 0) {
-            setBillId(billsResponse.bills[0].id);
-            setAmountPaid(String(billsResponse.bills[0].minimumPayment));
+          const selectedBill =
+            billsResponse.bills.find((bill) => bill.id === prefillBillId) ||
+            billsResponse.bills[0];
+
+          setBillId(selectedBill.id);
+          setAmountPaid(String(selectedBill.minimumPayment));
         }
         } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load payments");

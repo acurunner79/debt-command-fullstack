@@ -239,6 +239,7 @@ export function CalendarPage() {
                       <th>Status</th>
                       <th>Expected</th>
                       <th>Paid</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -252,6 +253,17 @@ export function CalendarPage() {
                         <td>{item.status}</td>
                         <td>{formatCurrency(item.amountExpected)}</td>
                         <td>{formatCurrency(item.amountPaid)}</td>
+                        <td>
+                          {["UNPAID", "PARTIAL", "OVERDUE"].includes(item.status) ? (
+                            <Link
+                              to={`/payments?billId=${item.bill.id}&month=${selectedMonthNumber}&year=${selectedYear}`}
+                            >
+                              Log Payment
+                            </Link>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
