@@ -291,6 +291,55 @@ export function PaymentsPage() {
     }
   }
 
+  function exportPaymentHistoryCsv() {
+    const headers = [
+      "Bill",
+      "Month",
+      "Year",
+      "Status",
+      "Amount Paid",
+      "Payment Date",
+      "Notes",
+    ];
+
+    const rows = sortedFilteredPayments.map((payment) => [
+      payment.bill.name,
+      String(payment.month),
+      String(payment.year),
+      payment.status,
+      String(payment.amountPaid),
+      payment.paymentDate
+        ? new Date(payment.paymentDate).toLocaleDateString()
+        : "",
+      payment.notes || "",
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => `"${String(value).replaceAll('"', '""')}"`)
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `debt-command-payment-history-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <main className="page payments-page">
       <header className="page-header">
@@ -569,6 +618,14 @@ export function PaymentsPage() {
                 }}
               >
                 Clear Filters
+              </button>
+
+              <button
+                type="button"
+                onClick={exportPaymentHistoryCsv}
+                disabled={sortedFilteredPayments.length === 0}
+              >
+                Export CSV
               </button>
             </div>
 
