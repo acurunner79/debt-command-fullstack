@@ -4,7 +4,7 @@ import {
   useState,
   type ComponentProps,
 } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { getBills } from "../services/billService";
 import {
   createPayment,
@@ -33,6 +33,11 @@ export function PaymentsPage() {
   const prefillBillId = searchParams.get("billId");
   const prefillMonth = searchParams.get("month");
   const prefillYear = searchParams.get("year");
+  const returnTo = searchParams.get("returnTo");
+  const backToCalendarUrl =
+    returnTo === "calendar" && prefillMonth && prefillYear
+      ? `/calendar?month=${prefillMonth}&year=${prefillYear}&paymentLogged=true`
+      : "/calendar";
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
@@ -48,6 +53,7 @@ export function PaymentsPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     async function loadInitialPaymentData() {
@@ -119,6 +125,7 @@ export function PaymentsPage() {
     }
 
     setError("");
+    setSuccess("");
     setSubmitting(true);
 
     try {
@@ -133,6 +140,7 @@ export function PaymentsPage() {
       });
 
       setNotes("");
+      setSuccess("Payment logged successfully.");
       await refreshPaymentData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to log payment");
@@ -164,6 +172,15 @@ export function PaymentsPage() {
       </header>
 
       {error && <p className="status-message status-message--error">{error}</p>}
+
+      {success && (
+        <div className="status-message">
+          <p>{success}</p>
+          {returnTo === "calendar" && (
+            <Link to={backToCalendarUrl}>Back to Calendar</Link>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <p className="status-message">Loading payment ledger...</p>
@@ -303,6 +320,15 @@ export function PaymentsPage() {
               <button type="submit" disabled={submitting}>
                 {submitting ? "Logging..." : "Log Payment"}
               </button>
+
+              {success && (
+                <div className="status-message">
+                  <p>{success}</p>
+                  {returnTo === "calendar" && (
+                    <Link to={backToCalendarUrl}>Back to Calendar</Link>
+                  )}
+                </div>
+              )}
             </form>
           </section>
 

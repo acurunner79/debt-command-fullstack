@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { getBills } from "../services/billService";
 import { getPayments } from "../services/paymentService";
 import type { Bill } from "../types/bill";
@@ -23,9 +23,29 @@ import {
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function CalendarPage() {
+  const [searchParams] = useSearchParams();
+  const prefillMonth = searchParams.get("month");
+  const prefillYear = searchParams.get("year");
+  const paymentLogged = searchParams.get("paymentLogged") === "true";
+
   const [bills, setBills] = useState<Bill[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const monthNumber = Number(prefillMonth);
+    const yearNumber = Number(prefillYear);
+
+    if (
+      Number.isInteger(monthNumber) &&
+      Number.isInteger(yearNumber) &&
+      monthNumber >= 1 &&
+      monthNumber <= 12
+    ) {
+      return new Date(yearNumber, monthNumber - 1, 1);
+    }
+
+    return new Date();
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [checklistFilter, setChecklistFilter] =
@@ -113,6 +133,10 @@ export function CalendarPage() {
       </header>
 
       {error && <p className="status-message status-message--error">{error}</p>}
+
+      {paymentLogged && (
+        <p className="status-message">Payment checklist updated.</p>
+      )}
 
       {loading ? (
         <p className="status-message">Loading calendar...</p>
@@ -256,7 +280,7 @@ export function CalendarPage() {
                         <td>
                           {["UNPAID", "PARTIAL", "OVERDUE"].includes(item.status) ? (
                             <Link
-                              to={`/payments?billId=${item.bill.id}&month=${selectedMonthNumber}&year=${selectedYear}`}
+                              to={`/payments?billId=${item.bill.id}&month=${selectedMonthNumber}&year=${selectedYear}&returnTo=calendar`}
                             >
                               Log Payment
                             </Link>
