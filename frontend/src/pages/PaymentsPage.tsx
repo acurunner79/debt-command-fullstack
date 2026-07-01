@@ -55,6 +55,12 @@ export function PaymentsPage() {
   const [status, setStatus] = useState<PaymentStatus>("PAID");
   const [notes, setNotes] = useState("");
   const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
+
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<"ALL" | PaymentStatus>("ALL");
+  const [historyMonthFilter, setHistoryMonthFilter] = useState(String(currentMonth));
+  const [historyYearFilter, setHistoryYearFilter] = useState(String(currentYear));
+  const [historyBillFilter, setHistoryBillFilter] = useState("ALL");
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -120,6 +126,30 @@ export function PaymentsPage() {
         payment.year === currentYear
     );
     }, [payments, currentMonth, currentYear]);
+
+  const filteredPayments = useMemo(() => {
+    return payments.filter((payment) => {
+      const matchesStatus =
+      historyStatusFilter === "ALL" || payment.status === historyStatusFilter;
+
+    const matchesMonth =
+      !historyMonthFilter || payment.month === Number(historyMonthFilter);
+
+    const matchesYear =
+      !historyYearFilter || payment.year === Number(historyYearFilter);
+
+    const matchesBill =
+      historyBillFilter === "ALL" || payment.billId === historyBillFilter;
+
+    return matchesStatus && matchesMonth && matchesYear && matchesBill;
+    });
+  }, [payments, historyStatusFilter, historyMonthFilter, historyYearFilter, historyBillFilter]);
+
+  const filteredTotalPaid = useMemo(() => {
+    return filteredPayments.reduce((total, payment) => {
+      return total + Number(payment.amountPaid || 0);
+    }, 0);
+  }, [filteredPayments]);
 
   function startEditingPayment(payment: Payment) {
     setEditingPaymentId(payment.id);
@@ -399,11 +429,83 @@ export function PaymentsPage() {
               <h2>Logged Payments</h2>
             </div>
 
-            {payments.length === 0 ? (
-              <p className="status-message">No payments logged yet.</p>
+            <div className="command-form">
+              <label>
+                Bill
+                <select
+                  value={historyBillFilter}
+                  onChange={(event) => setHistoryBillFilter(event.target.value)}
+                >
+                  <option value="ALL">ALL</option>
+                  {bills.map((bill) => (
+                    <option key={bill.id} value={bill.id}>
+                      {bill.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                Status
+                <select
+                  value={historyStatusFilter}
+                  onChange={(event) =>
+                    setHistoryStatusFilter(event.target.value as "ALL" | PaymentStatus)
+                  }
+                >
+                  <option value="ALL">ALL</option>
+                  {paymentStatusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                Month
+                <input
+                  value={historyMonthFilter}
+                  onChange={(event) => setHistoryMonthFilter(event.target.value)}
+                  type="number"
+                  min="1"
+                  max="12"
+                />
+              </label>
+
+              <label>
+                Year
+                <input
+                  value={historyYearFilter}
+                  onChange={(event) => setHistoryYearFilter(event.target.value)}
+                  type="number"
+                  min="2000"
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setHistoryBillFilter("ALL");
+                  setHistoryStatusFilter("ALL");
+                  setHistoryMonthFilter("");
+                  setHistoryYearFilter("");
+                }}
+              >
+                Clear Filters
+              </button>
+            </div>
+
+            {filteredPayments.length === 0 ? (
+              <p className="status-message">No payments match the current filters.</p>
             ) : (
-              <ul className="record-list">
-                {payments.map((payment) => (
+              <>
+                <p className="status-message">
+                  Filtered total: {formatCurrency(filteredTotalPaid)}
+                </p>
+
+                <ul className="record-list">
+                  {filteredPayments.map((payment) => (
                   <li className="record-card" key={payment.id}>
                     <div>
                       <strong>{payment.bill.name}</strong>
@@ -438,6 +540,7 @@ export function PaymentsPage() {
                   </li>
                 ))}
               </ul>
+            </>
             )}
           </section>
         </>
