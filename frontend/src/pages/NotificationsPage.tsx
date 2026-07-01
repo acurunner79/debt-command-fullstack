@@ -6,22 +6,53 @@ import {
   getBillNotifications,
   getMonthlyReviewNotification,
 } from "../utils/notificationUtils";
+import { getPayments } from "../services/paymentService";
+import { getPayoffScenarios } from "../services/payoffScenarioService";
+import type { Payment } from "../types/payment";
+import type {
+  ParsedPayoffScenario,
+  PayoffScenario,
+} from "../types/payoffScenario";
+import { getAutomationNotifications } from "../utils/automationUtils";
+
+
 
 export function NotificationsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [savedScenarios, setSavedScenarios] = useState<ParsedPayoffScenario[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  function parseScenario(scenario: PayoffScenario): ParsedPayoffScenario {
+    return {
+      ...scenario,
+      strategy: scenario.strategy,
+      extraPayment: Number(scenario.extraPayment || 0),
+      includedDebtTypes: JSON.parse(scenario.includedDebtTypes),
+    };
+  }
 
   useEffect(() => {
     async function loadBills() {
       setError("");
 
       try {
-        const response = await getBills();
-        setBills(response.bills);
+        const [billsResponse, paymentsResponse, scenariosResponse] =
+          await Promise.all([
+            getBills(),
+            getPayments(),
+            getPayoffScenarios(),
+          ]);
+
+        setBills(billsResponse.bills);
+        setPayments(paymentsResponse.payments);
+        setSavedScenarios(scenariosResponse.scenarios.map(parseScenario));
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load notifications"
+          err instanceof Error ? err.message : "Failed to load automation notices"
         );
       } finally {
         setLoading(false);
@@ -34,9 +65,14 @@ export function NotificationsPage() {
   const notifications = useMemo(() => {
     return [
       ...getBillNotifications(bills),
+      ...getAutomationNotifications({
+        bills,
+        payments,
+        savedScenarios,
+      }),
       getMonthlyReviewNotification(),
     ];
-  }, [bills]);
+  }, [bills, payments, savedScenarios]);
 
   return (
     <main className="page notifications-page">
