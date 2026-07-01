@@ -813,3 +813,20 @@ header h1 {
     font-size: 0.8rem;
   }
 }
+
+.payment-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.payment-card-actions > button {
+  min-width: 96px;
+}
+
+.payment-card-actions .status-message {
+  margin-top: 0.25rem;
+  max-width: 330px;
+  text-align: left;
+}

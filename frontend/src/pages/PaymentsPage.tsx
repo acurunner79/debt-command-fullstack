@@ -695,7 +695,7 @@ export function PaymentsPage() {
                         {payment.notes && <p>{payment.notes}</p>}
                       </div>
 
-                      <div>
+                      <div className="payment-card-actions">
                         <button
                           type="button"
                           onClick={() => startEditingPayment(payment)}
@@ -717,7 +717,7 @@ export function PaymentsPage() {
                         {paymentPendingDelete?.id === payment.id && (
                           <div className="status-message status-message--error">
                             <p>
-                              Delete this payment for <strong>{payment.bill.name}</strong>?
+                              Delete this payment for <strong>{payment.bill.name}?</strong>
                             </p>
 
                             <p>
