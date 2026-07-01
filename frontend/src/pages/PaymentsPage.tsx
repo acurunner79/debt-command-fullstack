@@ -280,11 +280,20 @@ export function PaymentsPage() {
   };
 
   async function handleDeletePayment(id: string) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this payment? This action cannot be undone."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     setError("");
     setSuccess("");
 
     try {
       await deletePayment(id);
+      setSuccess("Payment deleted successfully.");
       await refreshPaymentData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete payment");
