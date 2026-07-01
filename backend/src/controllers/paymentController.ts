@@ -96,6 +96,86 @@ export async function createPayment(req: AuthRequest, res: Response) {
   return res.status(201).json({ payment });
 }
 
+export async function updatePayment(req: AuthRequest, res: Response) {
+  if (!req.userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const id = req.params.id;
+
+  if (typeof id !== "string") {
+    return res.status(400).json({ message: "Invalid payment id" });
+  }
+
+  const { billId, month, year, amountPaid, paymentDate, status, notes } =
+    req.body;
+
+  if (!billId || month === undefined || year === undefined || amountPaid === undefined) {
+    return res.status(400).json({
+      message: "Bill, month, year, and amount paid are required",
+    });
+  }
+
+  const parsedMonth = Number(month);
+  const parsedYear = Number(year);
+  const parsedAmount = Number(amountPaid);
+
+  if (!Number.isInteger(parsedMonth) || parsedMonth < 1 || parsedMonth > 12) {
+    return res.status(400).json({ message: "Month must be between 1 and 12" });
+  }
+
+  if (!Number.isInteger(parsedYear) || parsedYear < 2000) {
+    return res.status(400).json({ message: "Year must be valid" });
+  }
+
+  if (Number.isNaN(parsedAmount) || parsedAmount < 0) {
+    return res.status(400).json({ message: "Amount paid must be valid" });
+  }
+
+  const existingPayment = await prisma.payment.findFirst({
+    where: {
+      id,
+      userId: req.userId,
+    },
+  });
+
+  if (!existingPayment) {
+    return res.status(404).json({ message: "Payment not found" });
+  }
+
+  const bill = await prisma.bill.findFirst({
+    where: {
+      id: billId,
+      userId: req.userId,
+      active: true,
+    },
+  });
+
+  if (!bill) {
+    return res.status(404).json({ message: "Bill not found" });
+  }
+
+  const payment = await prisma.payment.update({
+    where: {
+      id,
+    },
+    data: {
+      billId,
+      month: parsedMonth,
+      year: parsedYear,
+      amountPaid: parsedAmount,
+      paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
+      status: status || "PAID",
+      notes: notes ? String(notes).trim() : null,
+    },
+    include: {
+      bill: true,
+    },
+  });
+
+  return res.json({ payment });
+}
+
 export async function deletePayment(req: AuthRequest, res: Response) {
   if (!req.userId) {
     return res.status(401).json({ message: "Unauthorized" });

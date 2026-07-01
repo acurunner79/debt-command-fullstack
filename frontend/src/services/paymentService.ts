@@ -16,6 +16,16 @@ export function createPayment(input: CreatePaymentInput) {
   });
 }
 
+export function updatePayment(
+  id: string,
+  input: CreatePaymentInput
+) {
+  return apiRequest<PaymentResponse>(`/payments/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
 export function deletePayment(id: string) {
   return apiRequest<PaymentResponse>(`/payments/${id}`, {
     method: "DELETE",

@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ComponentProps,
 } from "react";
@@ -10,6 +11,7 @@ import {
   createPayment,
   deletePayment,
   getPayments,
+  updatePayment
 } from "../services/paymentService";
 import type { Bill } from "../types/bill";
 import type { Payment, PaymentStatus } from "../types/payment";
@@ -39,6 +41,8 @@ export function PaymentsPage() {
       ? `/calendar?month=${prefillMonth}&year=${prefillYear}&paymentLogged=true`
       : "/calendar";
 
+  const paymentFormRef = useRef<HTMLElement | null>(null);
+
   const [payments, setPayments] = useState<Payment[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [billId, setBillId] = useState(prefillBillId || "");
@@ -50,6 +54,7 @@ export function PaymentsPage() {
   );
   const [status, setStatus] = useState<PaymentStatus>("PAID");
   const [notes, setNotes] = useState("");
+  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -116,6 +121,28 @@ export function PaymentsPage() {
     );
     }, [payments, currentMonth, currentYear]);
 
+  function startEditingPayment(payment: Payment) {
+    setEditingPaymentId(payment.id);
+    setBillId(payment.billId);
+    setMonth(String(payment.month));
+    setYear(String(payment.year));
+    setAmountPaid(String(payment.amountPaid));
+    setPaymentDate(
+      payment.paymentDate
+        ? new Date(payment.paymentDate).toISOString().slice(0, 10)
+        : today.toISOString().slice(0, 10)
+    );
+    setStatus(payment.status);
+    setNotes(payment.notes || "");
+    setError("");
+    setSuccess("");
+
+    paymentFormRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
   const handleSubmit: FormSubmitHandler = async (event) => {
     event.preventDefault();
 
@@ -129,7 +156,7 @@ export function PaymentsPage() {
     setSubmitting(true);
 
     try {
-      await createPayment({
+      const paymentPayload = {
         billId,
         month: Number(month),
         year: Number(year),
@@ -137,10 +164,18 @@ export function PaymentsPage() {
         paymentDate,
         status,
         notes,
-      });
+      };
 
+      if (editingPaymentId) {
+        await updatePayment(editingPaymentId, paymentPayload);
+        setSuccess("Payment updated successfully.");
+      } else {
+        await createPayment(paymentPayload);
+        setSuccess("Payment logged successfully.");
+      }
+
+      setEditingPaymentId(null);
       setNotes("");
-      setSuccess("Payment logged successfully.");
       await refreshPaymentData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to log payment");
@@ -216,11 +251,17 @@ export function PaymentsPage() {
             </div>
           </section>
 
-          <section className="panel">
+          <section className="panel" ref={paymentFormRef}>
             <div className="section-heading">
               <p className="eyebrow">New Payment</p>
-              <h2>Log Payment</h2>
+              <h2>{editingPaymentId ? "Update Payment" : "Log Payment"}</h2>
             </div>
+
+            {editingPaymentId && (
+              <p className="status-message">
+                Editing payment. Update the form and save changes.
+              </p>
+            )}
 
             <form className="command-form" onSubmit={handleSubmit}>
               <label>
@@ -318,8 +359,28 @@ export function PaymentsPage() {
               </label>
 
               <button type="submit" disabled={submitting}>
-                {submitting ? "Logging..." : "Log Payment"}
+                {submitting
+                  ? editingPaymentId
+                    ? "Updating..."
+                    : "Logging..."
+                  : editingPaymentId
+                    ? "Update Payment"
+                    : "Log Payment"}
               </button>
+
+              {editingPaymentId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingPaymentId(null);
+                    setNotes("");
+                    setSuccess("");
+                    setError("");
+                  }}
+                >
+                  Cancel Edit
+                </button>
+              )}
 
               {success && (
                 <div className="status-message">
@@ -359,12 +420,21 @@ export function PaymentsPage() {
                       {payment.notes && <p>{payment.notes}</p>}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleDeletePayment(payment.id)}
-                    >
-                      Delete
-                    </button>
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => startEditingPayment(payment)}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePayment(payment.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
