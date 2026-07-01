@@ -10,6 +10,7 @@ import { PayoffPlannerPage } from "./pages/PayoffPlannerPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { PaymentsPage } from "./pages/PaymentsPage";
+import { ProgressHistoryPage } from "./pages/ProgressHistoryPage";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
+          <Route path="/progress-history" element={<ProgressHistoryPage />} />
         </Route>
       </Route>
 
