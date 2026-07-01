@@ -174,6 +174,22 @@ export function PayoffPlannerPage() {
         );
     }, [filteredBills, strategy, extraPayment]);
 
+    const snowballComparison = useMemo(() => {
+      return calculatePayoffTimeline(
+        filteredBills,
+        "SNOWBALL",
+        Number(extraPayment || 0)
+      );
+    }, [filteredBills, extraPayment]);
+
+    const avalancheComparison = useMemo(() => {
+      return calculatePayoffTimeline(
+        filteredBills,
+        "AVALANCHE",
+        Number(extraPayment || 0)
+      );
+    }, [filteredBills, extraPayment]);
+
   return (
     <main className="page payoff-page">
       <header className="page-header">
@@ -378,6 +394,56 @@ export function PayoffPlannerPage() {
                 </strong>
               </article>
             </div>
+          </section>
+
+          <section className="panel">
+            <div className="section-heading">
+              <p className="eyebrow">Strategy Comparison</p>
+              <h2>Snowball vs Avalanche</h2>
+            </div>
+
+            <div className="metric-grid">
+              <article className="metric-card">
+                <span className="metric-card__label">Snowball Target</span>
+                <strong className="metric-card__value">
+                  {snowballComparison.timeline[0]?.name || "No target"}
+                </strong>
+                <p>
+                  Debt-Free Estimate:{" "}
+                  {snowballComparison.estimatedDebtFreeDate || "N/A"}
+                </p>
+                <p>
+                  Timeline: {snowballComparison.estimatedTotalMonths} months
+                </p>
+                <p>
+                  Payoff Budget:{" "}
+                  {formatCurrency(snowballComparison.totalMonthlyPayoffAmount)}
+                </p>
+              </article>
+
+              <article className="metric-card metric-card--accent">
+                <span className="metric-card__label">Avalanche Target</span>
+                <strong className="metric-card__value">
+                  {avalancheComparison.timeline[0]?.name || "No target"}
+                </strong>
+                <p>
+                  Debt-Free Estimate:{" "}
+                  {avalancheComparison.estimatedDebtFreeDate || "N/A"}
+                </p>
+                <p>
+                  Timeline: {avalancheComparison.estimatedTotalMonths} months
+                </p>
+                <p>
+                  Payoff Budget:{" "}
+                  {formatCurrency(avalancheComparison.totalMonthlyPayoffAmount)}
+                </p>
+              </article>
+            </div>
+
+            <p className="status-message">
+              Snowball prioritizes quick wins by smallest balance. Avalanche
+              prioritizes interest pressure by highest rate.
+            </p>
           </section>
 
           <section className="panel">
