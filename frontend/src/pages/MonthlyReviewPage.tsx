@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getBills } from "../services/billService";
 import { getPayments } from "../services/paymentService";
 import type { Bill } from "../types/bill";
-import type { Payment } from "../types/payment";
+import type { Payment, PaymentStatus } from "../types/payment";
 import { formatCurrency } from "../utils/currency";
 
 export function MonthlyReviewPage() {
@@ -15,8 +15,18 @@ export function MonthlyReviewPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [selectedMonth, setSelectedMonth] = useState(String(currentMonth));
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
+  const [activityStatusFilter, setActivityStatusFilter] =
+  useState<"ALL" | PaymentStatus>("ALL");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const paymentStatusOptions: PaymentStatus[] = [
+        "PAID",
+        "PARTIAL",
+        "UNPAID",
+        "OVERDUE",
+        "SKIPPED",
+    ];
 
   useEffect(() => {
     async function loadMonthlyReviewData() {
@@ -79,17 +89,31 @@ export function MonthlyReviewPage() {
 
         const unpaid = bills.filter((bill) => !paidBillIds.has(bill.id)).length;
 
+        const totalTrackedBills = bills.length;
+        const completionRate =
+        totalTrackedBills === 0 ? 0 : Math.round((paid / totalTrackedBills) * 100);
+
         return {
             paid,
             partial,
             unpaid,
             overdue,
             skipped,
+            completionRate,
         };
     }, [bills, selectedMonthPayments]);
 
-    const recentMonthlyPayments = useMemo(() => {
-        return [...selectedMonthPayments]
+    const filteredMonthlyPayments = useMemo(() => {
+        return selectedMonthPayments.filter((payment) => {
+            return (
+            activityStatusFilter === "ALL" ||
+            payment.status === activityStatusFilter
+            );
+        });
+        }, [selectedMonthPayments, activityStatusFilter]);
+
+        const recentMonthlyPayments = useMemo(() => {
+        return [...filteredMonthlyPayments]
             .sort((a, b) => {
             const aDate = a.paymentDate ? new Date(a.paymentDate).getTime() : 0;
             const bDate = b.paymentDate ? new Date(b.paymentDate).getTime() : 0;
@@ -97,7 +121,7 @@ export function MonthlyReviewPage() {
             return bDate - aDate;
             })
             .slice(0, 5);
-    }, [selectedMonthPayments]);
+        }, [filteredMonthlyPayments]);
 
     const needsAttentionBills = useMemo(() => {
         return bills.filter((bill) => {
@@ -296,47 +320,72 @@ export function MonthlyReviewPage() {
                 </strong>
               </article>
 
-              <article className="metric-card">
-                <span className="metric-card__label">Active Bills</span>
-                <strong className="metric-card__value">{bills.length}</strong>
-              </article>
+                <article className="metric-card">
+                    <span className="metric-card__label">Active Bills</span>
+                    <strong className="metric-card__value">{bills.length}</strong>
+                </article>
+
+                <article className="metric-card metric-card--accent">
+                    <span className="metric-card__label">Completion Rate</span>
+                    <strong className="metric-card__value">
+                        {completionBreakdown.completionRate}%
+                    </strong>
+                </article>
             </div>
 
-            <div className="metric-grid metric-grid--compact">
-                <article className="metric-card metric-card--accent">
+            <div className="completion-progress">
+                <div className="completion-progress__track">
+                    <div
+                    className="completion-progress__bar"
+                    style={{ width: `${completionBreakdown.completionRate}%` }}
+                    />
+                </div>
+
+                <p>
+                    {completionBreakdown.completionRate}% of active bills are marked paid for
+                    this review period.
+                </p>
+            </div>
+
+            <div className="dashboard-insight-group">
+                <h3>Completion Breakdown</h3>
+
+                <div className="metric-grid metric-grid--compact">
+                    <article className="metric-card metric-card--accent">
                     <span className="metric-card__label">Paid</span>
                     <strong className="metric-card__value">
-                    {completionBreakdown.paid}
+                        {completionBreakdown.paid}
                     </strong>
-                </article>
+                    </article>
 
-                <article className="metric-card">
+                    <article className="metric-card">
                     <span className="metric-card__label">Partial</span>
                     <strong className="metric-card__value">
-                    {completionBreakdown.partial}
+                        {completionBreakdown.partial}
                     </strong>
-                </article>
+                    </article>
 
-                <article className="metric-card">
+                    <article className="metric-card">
                     <span className="metric-card__label">Unpaid</span>
                     <strong className="metric-card__value">
-                    {completionBreakdown.unpaid}
+                        {completionBreakdown.unpaid}
                     </strong>
-                </article>
+                    </article>
 
-                <article className="metric-card">
+                    <article className="metric-card">
                     <span className="metric-card__label">Overdue</span>
                     <strong className="metric-card__value">
-                    {completionBreakdown.overdue}
+                        {completionBreakdown.overdue}
                     </strong>
-                </article>
+                    </article>
 
-                <article className="metric-card">
+                    <article className="metric-card">
                     <span className="metric-card__label">Skipped</span>
                     <strong className="metric-card__value">
-                    {completionBreakdown.skipped}
+                        {completionBreakdown.skipped}
                     </strong>
-                </article>
+                    </article>
+                </div>
             </div>
           </section>
 
@@ -426,48 +475,67 @@ export function MonthlyReviewPage() {
                 )}
             </section>
 
-          <section className="panel">
-            <div className="section-heading">
-                <p className="eyebrow">Monthly Activity</p>
-                <h2>Recent Payments</h2>
-            </div>
-
-            {recentMonthlyPayments.length === 0 ? (
-                <p className="status-message">
-                No payments logged for this review period.
-                </p>
-            ) : (
-                <ul className="record-list">
-                {recentMonthlyPayments.map((payment) => (
-                    <li className="record-card" key={payment.id}>
-                    <div>
-                        <strong>{payment.bill.name}</strong>
-                        <p>
-                        {payment.month}/{payment.year} ·{" "}
-                        <span
-                            className={`status-badge status-badge--${payment.status.toLowerCase()}`}
-                        >
-                            {payment.status}
-                        </span>
-                        </p>
-                        <p className="payment-card-amount">
-                        <span>Amount Paid</span>
-                        <strong>{formatCurrency(payment.amountPaid)}</strong>
-                        </p>
-                        {payment.paymentDate && (
-                        <p className="payment-card-date">
-                            <span>Payment Date</span>
-                            <strong>
-                            {new Date(payment.paymentDate).toLocaleDateString()}
-                            </strong>
-                        </p>
-                        )}
+                <section className="panel">
+                    <div className="section-heading">
+                        <p className="eyebrow">Monthly Activity</p>
+                        <h2>Recent Payments</h2>
                     </div>
-                    </li>
-                ))}
-                </ul>
-            )}
-            </section>
+
+                    <div className="command-form">
+                        <label>
+                            Status
+                            <select
+                            value={activityStatusFilter}
+                            onChange={(event) =>
+                                setActivityStatusFilter(event.target.value as "ALL" | PaymentStatus)
+                            }
+                            >
+                            <option value="ALL">ALL</option>
+                            {paymentStatusOptions.map((option) => (
+                                <option key={option} value={option}>
+                                {option}
+                                </option>
+                            ))}
+                            </select>
+                        </label>
+                    </div>
+
+                    {recentMonthlyPayments.length === 0 ? (
+                    <p className="status-message">
+                    No payments logged for this review period.
+                    </p>
+                    ) : (
+                        <ul className="record-list">
+                            {recentMonthlyPayments.map((payment) => (
+                                <li className="record-card" key={payment.id}>
+                                    <div>
+                                        <strong>{payment.bill.name}</strong>
+                                        <p>
+                                        {payment.month}/{payment.year} ·{" "}
+                                        <span
+                                            className={`status-badge status-badge--${payment.status.toLowerCase()}`}
+                                        >
+                                            {payment.status}
+                                        </span>
+                                        </p>
+                                        <p className="payment-card-amount">
+                                        <span>Amount Paid</span>
+                                        <strong>{formatCurrency(payment.amountPaid)}</strong>
+                                        </p>
+                                        {payment.paymentDate && (
+                                        <p className="payment-card-date">
+                                            <span>Payment Date</span>
+                                            <strong>
+                                            {new Date(payment.paymentDate).toLocaleDateString()}
+                                            </strong>
+                                        </p>
+                                        )}
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
             </>
         )}
         </main>

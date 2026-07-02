@@ -340,6 +340,14 @@ header h1 {
   padding-top: 1.5rem;
 }
 
+.dashboard-insight-group .metric-grid {
+  width: 100%;
+}
+
+.dashboard-insight-group .metric-card {
+  min-width: 0;
+}
+
 .section-heading {
   display: grid;
   gap: 4px;
@@ -388,6 +396,35 @@ header h1 {
   color: var(--text-heading);
   font-size: clamp(1.35rem, 2.6vw, 2rem);
   line-height: 1;
+}
+
+.completion-progress {
+  margin-top: 1rem;
+}
+
+.completion-progress__track {
+  width: 100%;
+  height: 0.85rem;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.completion-progress__bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(56, 189, 248, 0.85),
+    rgba(34, 197, 94, 0.9)
+  );
+}
+
+.completion-progress p {
+  margin: 0.75rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
 }
 
 .action-grid {
