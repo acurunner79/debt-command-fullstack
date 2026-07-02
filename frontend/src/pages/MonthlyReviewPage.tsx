@@ -56,6 +56,38 @@ export function MonthlyReviewPage() {
     }, 0);
   }, [selectedMonthPayments]);
 
+  const completionBreakdown = useMemo(() => {
+    const paid = selectedMonthPayments.filter(
+        (payment) => payment.status === "PAID"
+    ).length;
+
+    const partial = selectedMonthPayments.filter(
+        (payment) => payment.status === "PARTIAL"
+    ).length;
+
+    const overdue = selectedMonthPayments.filter(
+        (payment) => payment.status === "OVERDUE"
+    ).length;
+
+    const skipped = selectedMonthPayments.filter(
+        (payment) => payment.status === "SKIPPED"
+    ).length;
+
+    const paidBillIds = new Set(
+        selectedMonthPayments.map((payment) => payment.billId)
+    );
+
+    const unpaid = bills.filter((bill) => !paidBillIds.has(bill.id)).length;
+
+    return {
+        paid,
+        partial,
+        unpaid,
+        overdue,
+        skipped,
+    };
+    }, [bills, selectedMonthPayments]);
+
   return (
     <main className="page monthly-review-page">
       <header className="page-header">
@@ -123,6 +155,43 @@ export function MonthlyReviewPage() {
                 <span className="metric-card__label">Active Bills</span>
                 <strong className="metric-card__value">{bills.length}</strong>
               </article>
+            </div>
+
+            <div className="metric-grid metric-grid--compact">
+                <article className="metric-card metric-card--accent">
+                    <span className="metric-card__label">Paid</span>
+                    <strong className="metric-card__value">
+                    {completionBreakdown.paid}
+                    </strong>
+                </article>
+
+                <article className="metric-card">
+                    <span className="metric-card__label">Partial</span>
+                    <strong className="metric-card__value">
+                    {completionBreakdown.partial}
+                    </strong>
+                </article>
+
+                <article className="metric-card">
+                    <span className="metric-card__label">Unpaid</span>
+                    <strong className="metric-card__value">
+                    {completionBreakdown.unpaid}
+                    </strong>
+                </article>
+
+                <article className="metric-card">
+                    <span className="metric-card__label">Overdue</span>
+                    <strong className="metric-card__value">
+                    {completionBreakdown.overdue}
+                    </strong>
+                </article>
+
+                <article className="metric-card">
+                    <span className="metric-card__label">Skipped</span>
+                    <strong className="metric-card__value">
+                    {completionBreakdown.skipped}
+                    </strong>
+                </article>
             </div>
           </section>
 
