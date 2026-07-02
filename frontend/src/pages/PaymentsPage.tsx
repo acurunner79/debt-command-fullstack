@@ -688,7 +688,10 @@ export function PaymentsPage() {
                             {payment.status}
                           </span>
                         </p>
-                        <p>Amount Paid: {formatCurrency(payment.amountPaid)}</p>
+                        <p className="payment-card-amount">
+                          <span>Amount Paid</span>
+                          <strong>{formatCurrency(payment.amountPaid)}</strong>
+                        </p>
                         {payment.paymentDate && (
                           <p>
                             Payment Date:{" "}

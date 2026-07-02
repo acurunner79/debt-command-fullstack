@@ -872,3 +872,22 @@ header h1 {
   border-color: rgba(148, 163, 184, 0.5);
   background: rgba(148, 163, 184, 0.08);
 }
+
+.payment-card-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.75rem;
+}
+
+.payment-card-amount span {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.payment-card-amount strong {
+  font-size: 1.25rem;
+  color: var(--color-text);
+}
