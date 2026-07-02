@@ -683,7 +683,10 @@ export function PaymentsPage() {
                       <div>
                         <strong>{payment.bill.name}</strong>
                         <p>
-                          {payment.month}/{payment.year} · {payment.status}
+                          {payment.month}/{payment.year} ·{" "}
+                          <span className={`status-badge status-badge--${payment.status.toLowerCase()}`}>
+                            {payment.status}
+                          </span>
                         </p>
                         <p>Amount Paid: {formatCurrency(payment.amountPaid)}</p>
                         {payment.paymentDate && (
