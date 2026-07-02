@@ -115,6 +115,37 @@ export function MonthlyReviewPage() {
 
     const visibleNeedsAttentionBills = needsAttentionBills.slice(0, 5);
 
+    function goToPreviousMonth() {
+        const monthNumber = Number(selectedMonth);
+        const yearNumber = Number(selectedYear);
+
+        if (monthNumber === 1) {
+            setSelectedMonth("12");
+            setSelectedYear(String(yearNumber - 1));
+            return;
+        }
+
+        setSelectedMonth(String(monthNumber - 1));
+        }
+
+        function goToCurrentMonth() {
+        setSelectedMonth(String(currentMonth));
+        setSelectedYear(String(currentYear));
+        }
+
+        function goToNextMonth() {
+        const monthNumber = Number(selectedMonth);
+        const yearNumber = Number(selectedYear);
+
+        if (monthNumber === 12) {
+            setSelectedMonth("1");
+            setSelectedYear(String(yearNumber + 1));
+            return;
+        }
+
+        setSelectedMonth(String(monthNumber + 1));
+    }
+
     function exportMonthlyReviewCsv() {
     const summaryRows = [
         ["Report Month", selectedMonth],
@@ -206,6 +237,19 @@ export function MonthlyReviewPage() {
         <p className="status-message">Loading monthly review...</p>
       ) : (
         <>
+        <div className="command-form">
+            <button type="button" onClick={goToPreviousMonth}>
+                Previous Month
+            </button>
+
+            <button type="button" onClick={goToCurrentMonth}>
+                Current Month
+            </button>
+
+            <button type="button" onClick={goToNextMonth}>
+                Next Month
+            </button>
+        </div>
           <section className="panel">
             <div className="section-heading">
               <p className="eyebrow">Report Period</p>
