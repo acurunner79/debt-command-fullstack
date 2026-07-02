@@ -891,3 +891,22 @@ header h1 {
   font-size: 1.25rem;
   color: var(--color-text);
 }
+
+.payment-card-date {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.75rem;
+}
+
+.payment-card-date span {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.payment-card-date strong {
+  color: var(--color-text);
+  font-size: 0.95rem;
+}

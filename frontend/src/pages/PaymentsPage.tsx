@@ -693,9 +693,9 @@ export function PaymentsPage() {
                           <strong>{formatCurrency(payment.amountPaid)}</strong>
                         </p>
                         {payment.paymentDate && (
-                          <p>
-                            Payment Date:{" "}
-                            {new Date(payment.paymentDate).toLocaleDateString()}
+                          <p className="payment-card-date">
+                            <span>Payment Date</span>
+                            <strong>{new Date(payment.paymentDate).toLocaleDateString()}</strong>
                           </p>
                         )}
                         {payment.notes && <p>{payment.notes}</p>}
