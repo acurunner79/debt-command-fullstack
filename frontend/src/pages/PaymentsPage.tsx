@@ -698,7 +698,12 @@ export function PaymentsPage() {
                             <strong>{new Date(payment.paymentDate).toLocaleDateString()}</strong>
                           </p>
                         )}
-                        {payment.notes && <p>{payment.notes}</p>}
+                        {payment.notes && (
+                          <p className="payment-card-notes">
+                            <span>Notes</span>
+                            <strong>{payment.notes}</strong>
+                          </p>
+                        )}
                       </div>
 
                       <div className="payment-card-actions">

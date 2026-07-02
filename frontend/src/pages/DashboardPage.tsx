@@ -119,6 +119,49 @@ export function DashboardPage() {
     return calculatePayoffTimeline(defaultBills, "SNOWBALL", 100);
   }, [bills, defaultPayoffScenario]);
 
+  const today = useMemo(() => new Date(), []);
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
+
+  const currentMonthPayments = useMemo(() => {
+    return payments.filter(
+      (payment) =>
+        payment.month === currentMonth &&
+        payment.year === currentYear
+    );
+  }, [payments, currentMonth, currentYear]);
+
+  const currentMonthPaidTotal = useMemo(() => {
+    return currentMonthPayments.reduce((total, payment) => {
+      return total + Number(payment.amountPaid || 0);
+    }, 0);
+  }, [currentMonthPayments]);
+
+  const unpaidOrPartialBillsThisMonth = useMemo(() => {
+    return bills.filter((bill) => {
+      const payment = currentMonthPayments.find(
+        (currentPayment) => currentPayment.billId === bill.id
+      );
+
+      if (!payment) {
+        return true;
+      }
+
+      return payment.status === "UNPAID" || payment.status === "PARTIAL";
+    });
+  }, [bills, currentMonthPayments]);
+
+  const recentPayments = useMemo(() => {
+    return [...payments]
+      .sort((a, b) => {
+        const aDate = a.paymentDate ? new Date(a.paymentDate).getTime() : 0;
+        const bDate = b.paymentDate ? new Date(b.paymentDate).getTime() : 0;
+
+        return bDate - aDate;
+      })
+      .slice(0, 3);
+  }, [payments]);
+
   const automationNotices = useMemo(() => {
     return getAutomationNotifications({
       bills,
@@ -235,6 +278,68 @@ export function DashboardPage() {
                   {savedScenarios.length}
                 </strong>
               </article>
+            </div>
+          </section>
+
+          <section className="panel">
+            <div className="section-heading">
+              <p className="eyebrow">Payment Intelligence</p>
+              <h2>This Month</h2>
+            </div>
+
+            <div className="metric-grid metric-grid--compact">
+              <article className="metric-card metric-card--accent">
+                <span className="metric-card__label">Payments Logged</span>
+                <strong className="metric-card__value">
+                  {currentMonthPayments.length}
+                </strong>
+              </article>
+
+              <article className="metric-card">
+                <span className="metric-card__label">Paid This Month</span>
+                <strong className="metric-card__value">
+                  {formatCurrency(currentMonthPaidTotal)}
+                </strong>
+              </article>
+
+              <article className="metric-card">
+                <span className="metric-card__label">Needs Attention</span>
+                <strong className="metric-card__value">
+                  {unpaidOrPartialBillsThisMonth.length}
+                </strong>
+              </article>
+            </div>
+
+            {recentPayments.length > 0 && (
+              <>
+                <h3>Recent Payments</h3>
+
+                <ul className="record-list">
+                  {recentPayments.map((payment) => (
+                    <li className="record-card" key={payment.id}>
+                      <div>
+                        <strong>{payment.bill.name}</strong>
+                        <p>
+                          {payment.month}/{payment.year} · {payment.status}
+                        </p>
+                        <p>{formatCurrency(payment.amountPaid)}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <div className="action-grid">
+              <Link className="action-card" to="/payments">
+                <span>Payment Ledger</span>
+                <strong>Review payments</strong>
+              </Link>
+
+              <Link className="action-card" to="/calendar">
+                <span>Payment Calendar</span>
+                <strong>Review checklist</strong>
+              </Link>
             </div>
           </section>
 
