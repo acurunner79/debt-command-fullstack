@@ -21,6 +21,7 @@ export function AppShell() {
           <NavLink to="/bills">Bills</NavLink>
           <NavLink to="/payoff-planner">Payoff Planner</NavLink>
           <NavLink to="/calendar">Calendar</NavLink>
+          <NavLink to="/monthly-review">Monthly Review</NavLink>
           <NavLink to="/notifications">Notifications</NavLink>
           <NavLink to="/payments">Payments</NavLink>
           <NavLink to="/progress-history">Progress</NavLink>

@@ -310,8 +310,33 @@ export function DashboardPage() {
               </article>
             </div>
 
+            {unpaidOrPartialBillsThisMonth.length > 0 && (
+            <div className="dashboard-insight-group">
+              <h3>Needs Attention</h3>
+                <ul className="record-list">
+                  {unpaidOrPartialBillsThisMonth.slice(0, 3).map((bill) => (
+                    <li className="record-card" key={bill.id}>
+                      <div>
+                        <strong>{bill.name}</strong>
+                        <p>Due day: {bill.dueDay}</p>
+                        <p>Minimum payment: {formatCurrency(bill.minimumPayment)}</p>
+                      </div>
+
+                      <Link
+                        className="action-card"
+                        to={`/payments?billId=${bill.id}&month=${currentMonth}&year=${currentYear}&returnTo=calendar`}
+                      >
+                        <span>Log Payment</span>
+                        <strong>Open</strong>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {recentPayments.length > 0 && (
-              <>
+              <div className="dashboard-insight-group">
                 <h3>Recent Payments</h3>
 
                 <ul className="record-list">
@@ -327,19 +352,23 @@ export function DashboardPage() {
                     </li>
                   ))}
                 </ul>
-              </>
+              </div>
             )}
 
-            <div className="action-grid">
-              <Link className="action-card" to="/payments">
-                <span>Payment Ledger</span>
-                <strong>Review payments</strong>
-              </Link>
+            <div className="dashboard-insight-group">
+              <h3>Quick Actions</h3>
 
-              <Link className="action-card" to="/calendar">
-                <span>Payment Calendar</span>
-                <strong>Review checklist</strong>
-              </Link>
+              <div className="action-grid">
+                <Link className="action-card" to="/payments">
+                  <span>Payment Ledger</span>
+                  <strong>Review payments</strong>
+                </Link>
+
+                <Link className="action-card" to="/calendar">
+                  <span>Payment Calendar</span>
+                  <strong>Review checklist</strong>
+                </Link>
+              </div>
             </div>
           </section>
 

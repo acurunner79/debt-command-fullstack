@@ -11,6 +11,7 @@ import { CalendarPage } from "./pages/CalendarPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { PaymentsPage } from "./pages/PaymentsPage";
 import { ProgressHistoryPage } from "./pages/ProgressHistoryPage";
+import { MonthlyReviewPage } from "./pages/MonthlyReviewPage";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/progress-history" element={<ProgressHistoryPage />} />
+          <Route path="/monthly-review" element={<MonthlyReviewPage />} />
         </Route>
       </Route>
 
